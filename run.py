@@ -1,5 +1,6 @@
 import asyncio
-import signal
+import logging
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -29,17 +30,18 @@ async def startup(dispatcher: Dispatcher):
         modules={'models': ['app.database.models']}
     )
     await Tortoise.generate_schemas()
-    print('Starting up...')
+    #logging.debug('включенно')
 
 
 async def shutdown(dispatcher: Dispatcher):
-    print('Shutting down...')
+    #logging.debug('выключение')
     await Tortoise.close_connections()
     exit(0)
 
 
 if __name__ == '__main__':
     try:
+        logging.basicConfig(level=logging.INFO)
         asyncio.run(main())
     except KeyboardInterrupt:
-        print('Выключение')
+        #logging.debug('выключенно')
