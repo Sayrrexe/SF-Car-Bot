@@ -53,4 +53,4 @@ class Service(Model):
     id = fields.IntField(pk=True)
     car = fields.ForeignKeyField('app.database.models.Car', related_name='services')
     type = fields.CharField(max_length=2, choices=TYPE_CHOICES)
-    date = fields.DatetimeField()
+    date = fields.DatetimeField(auto_now = True)
