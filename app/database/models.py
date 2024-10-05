@@ -3,6 +3,12 @@ from tortoise import fields
 
 from config import DB_URL
 
+TYPE_CHOICES = [
+        ('OL', 'OIL'), # масло
+        ('FL', 'filter'), # фильтр
+        ('SP', 'Support'), # тормозные колодки
+        ('FS', 'Full Service'), # полное ТО
+    ]
 
 class User(Model):
     id = fields.IntField(primary_key=True)
@@ -42,3 +48,9 @@ class Reminders(Model):
     created_at = fields.DatetimeField(auto_now_add=True)
     total_date = fields.DatetimeField()
     text = fields.TextField()
+    
+class Service(Model):
+    id = fields.IntField(pk=True)
+    car = fields.ForeignKeyField('app.database.models.Car', related_name='services')
+    type = fields.CharField(max_length=2, choices=TYPE_CHOICES)
+    date = fields.DatetimeField()
