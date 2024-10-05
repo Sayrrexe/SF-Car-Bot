@@ -46,7 +46,7 @@ class Reminders(Model):
     id = fields.IntField(primary_key=True)
     user = fields.ForeignKeyField('models.User', related_name='reminders', on_delete=on_delete.CASCADE)
     created_at = fields.DatetimeField(auto_now_add=True)
-    total_date = fields.DatetimeField()
+    total_date = fields.Datefield()
     text = fields.TextField()
     
 class Service(Model):
