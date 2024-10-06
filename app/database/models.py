@@ -17,7 +17,7 @@ class User(Model):
     created_at = fields.DatetimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.username
+        return self.username or self.tg_id
 
 class Car(Model):
     id = fields.IntField(primary_key=True)
@@ -31,9 +31,9 @@ class Car(Model):
 class Purchases(Model):
     id = fields.IntField(primary_key=True)
     user = fields.ForeignKeyField('models.User', related_name='purchases', on_delete=fields.CASCADE)
-    image = fields.TextField()
-    text = fields.TextField()
-    price = fields.DecimalField(max_digits=16, decimal_places=2)
+    image = fields.TextField(null=True)
+    text = fields.TextField(null=True)
+    price = fields.DecimalField(max_digits=16, decimal_places=2, null=True)
     
 class Notes(Model):
     id = fields.IntField(primary_key=True)
