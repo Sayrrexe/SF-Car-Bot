@@ -3,7 +3,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-from app.database.requests import create_user, create_car, get_all_user_cars, get_all_user_nots_per_year
+from app.database.requests import create_user, create_car, get_all_user_cars, get_all_user_nots_per_year, delete_car_by_model
 import app.keyboards as kb
 import app.states as st
 # для основной пользовательской части
@@ -16,6 +16,16 @@ user = Router()
 async def cmd_start(message: Message):
     await create_user(message.from_user.id, message.from_user.username) # добавление пользователя в бд
     await message.answer('Добро пожаловать в бот!\nУзнате список всех команд с помощью /help\nНажмите на кнопку что бы добавить характеристики вашего авто', reply_markup=kb.start_kb)
+
+@user.callback_query(F.data == 'return_callback')
+async def return_callback(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.answer('Вы в главном меню!')
+    
+@user.message(F.text == 'Добавить Авто')
+async def message_car_add(message: Message, state: FSMContext):
+    await message.answer('Для добавления вашего авто пожалуйста введите его марку вашего авто', reply_markup=kb.return_kb)
+    await state.set_state(st.CreateAutoFSM.brand)
     
 @user.callback_query(F.data == 'car_add_callback')
 async def cq_car_add(callback: CallbackQuery, state: FSMContext):
@@ -23,11 +33,6 @@ async def cq_car_add(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer('Для добавления вашего авто пожалуйста введите его марку вашего авто', reply_markup=kb.return_kb)
     await state.set_state(st.CreateAutoFSM.brand)
     
-@user.callback_query(F.data == 'return_callback')
-async def return_callback(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
-    await callback.answer('Вы в главном меню!')
-
 @user.message(st.CreateAutoFSM.brand)
 async def create_auto_brand(message: Message, state: FSMContext):
     await state.update_data(brand = message.text, id = message.from_user.id)
@@ -83,3 +88,22 @@ async def profile_cmd(message: Message):
     else:
         cars = 'У пользователя нет автомобилей.\n'
     await message.answer(f'Профиль пользователя: {message.from_user.username}\n\n{cars}\nТраты на автомобиль за год: {expenses}', reply_markup=await kb.profile_kb(message.from_user.id))
+    
+@user.message(F.text == 'Настройки')
+async def settings_cmd(message: Message):
+    await message.answer('Выберите действие', reply_markup=kb.settings_kb)
+    
+@user.message(F.text == 'Удалить Авто')
+async def delete_car_cmd(message: Message, state: FSMContext):
+    await message.answer('Выберите авто на встроенной клавиатуре\nВнимание восстановить авто после удаления НЕЛЬЗЯ!!!', reply_markup=await kb.all_cars_kb(message.from_user.id))
+    await state.set_state(st.CarDeleteFSM.car)
+    
+@user.message(st.CarDeleteFSM.car)
+async def delete_car_fsm(message: Message, state: FSMContext):
+    success = await delete_car_by_model(message.from_user.id, message.text)
+    if success: 
+        await message.answer('Авто успешно удалено.')
+    else:
+        await message.answer('Авто не найдено или уже удалено.')
+    await state.clear()  # Завершить состояние
+    await message.answer('Вы в главном меню', reply_markup=kb.main_kb)
