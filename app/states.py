@@ -1,9 +1,12 @@
 from aiogram.fsm.state import State, StatesGroup
 
 # Для состояний
-'''
-class Regestration(StatesGroup): # Пример
-    name = State()
-    number = State()
-    location = State()
-'''
+
+
+class CreateAutoFSM(StatesGroup):
+    user = State()
+    brand = State()
+    model = State()
+    year = State()
+    engine = State()
+    mileage = State()
