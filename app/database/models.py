@@ -39,8 +39,8 @@ class Notes(Model):
     id = fields.IntField(primary_key=True)
     user = fields.ForeignKeyField('models.User', related_name='notes', on_delete=fields.CASCADE)
     created_date = fields.DatetimeField(auto_now = True)
-    price = fields.DecimalField(max_digits=10, decimal_places=2)
-    title = fields.CharField(max_length=255)
+    price = fields.DecimalField(max_digits=10, decimal_places=2, null = True)
+    title = fields.CharField(max_length=255, null = True)
     
 class Reminders(Model):
     id = fields.IntField(primary_key=True)
