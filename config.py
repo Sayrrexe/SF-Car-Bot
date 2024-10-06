@@ -1,4 +1,4 @@
-TOKEN='8086979841:AAHJbYtgpUzBfMaz4_GnL0WcoVE1Oc2h3BA'
+TOKEN='7760700196:AAHGZF6ow7LAm45ztnoLpsvBE3Qo9KBOGSw'
 DB_URL='sqlite://db.sqlite3'
 TYPE_CHOICES = [
         ('OL', 'OIL'), # масло

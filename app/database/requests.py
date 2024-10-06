@@ -46,3 +46,18 @@ async def get_all_user_nots_per_year(tg_id: int):
     recent_notes = await Notes.filter(user=user, created_date__gte=one_year_ago).all()
     total_expenses = sum(note.price for note in recent_notes if note.price is not None)
     return total_expenses 
+
+async def delete_car_by_model(tg_id: int, message):
+    message = message.split(' ')
+    print(message)
+    if len(message) < 2:
+        return False
+    brand, model = message[0], message[1]
+    print(brand, model)
+    user = await User.get(tg_id = tg_id)
+    car = await Car.get(user=user, brand=brand, model=model).first()
+    print(car)
+    if car:
+        await car.delete()
+        return True
+    return False
