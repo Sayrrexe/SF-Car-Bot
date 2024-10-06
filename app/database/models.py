@@ -1,14 +1,8 @@
 from tortoise.models import Model
 from tortoise import fields
 
-from config import DB_URL
+from config import TYPE_CHOICES
 
-TYPE_CHOICES = [
-        ('OL', 'OIL'), # масло
-        ('FL', 'filter'), # фильтр
-        ('SP', 'Support'), # тормозные колодки
-        ('FS', 'Full Service'), # полное ТО
-    ]
 
 class User(Model):
     id = fields.IntField(primary_key=True)
