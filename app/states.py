@@ -14,3 +14,6 @@ class CreateAutoFSM(StatesGroup):
 class CarDeleteFSM(StatesGroup):
     car = State()
     user = State()
+
+class ProfileUserFSM(StatesGroup):
+    car = State()
