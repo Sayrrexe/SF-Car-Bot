@@ -3,10 +3,10 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-from app.database.requests import create_user, create_car, get_all_user_cars, get_all_user_nots_per_year, delete_car_by_model
+from app.database.requests import create_user, create_car, get_all_user_cars, get_all_user_nots_per_year, delete_car_by_model, get_car_by_model
 import app.keyboards as kb
 import app.states as st
-# для основной пользовательской части
+
 
 user = Router()
 
@@ -14,7 +14,7 @@ user = Router()
 
 @user.message(CommandStart())
 async def cmd_start(message: Message):
-    await create_user(message.from_user.id, message.from_user.username) # добавление пользователя в бд
+    await create_user(message.from_user.id, message.from_user.username)
     await message.answer('Добро пожаловать в бот!\nУзнате список всех команд с помощью /help\nНажмите на кнопку что бы добавить характеристики вашего авто', reply_markup=kb.start_kb)
 
 @user.callback_query(F.data == 'return_callback')
@@ -75,7 +75,7 @@ async def menu_cmd(message: Message):
     await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру', reply_markup= kb.main_kb)
     
 @user.message(F.text == 'Профиль')
-async def profile_cmd(message: Message):
+async def profile_cmd(message: Message, state: FSMContext):
     car = await get_all_user_cars(message.from_user.id)
     expenses = await get_all_user_nots_per_year(message.from_user.id)
     cars = f'Автомобили:\n'
@@ -88,6 +88,24 @@ async def profile_cmd(message: Message):
     else:
         cars = 'У пользователя нет автомобилей.\n'
     await message.answer(f'Профиль пользователя: {message.from_user.username}\n\n{cars}\nТраты на автомобиль за год: {expenses}', reply_markup=await kb.profile_kb(message.from_user.id))
+    await state.set_state(st.ProfileUserFSM.car)
+    
+@user.message(st.ProfileUserFSM.car)
+async def settings_car_fsm(message: Message, state: FSMContext):
+    text = message.text
+    if text == 'Отмена':
+        state.clear()
+        await message.answer('Выберите пункт меню', reply_markup=await kb.main_kb)
+    cars = await get_car_by_model(message.from_user.id, text)
+    if cars:  
+        for car in cars:
+            text = f'Автомобиль {car['brand']} {car['model']}:\n\nПроизводитель - {car['brand']}\nМодель - {car['model']}\nГод выпуска - {car['year']}\nОбъём мотора - {car['engine']}\nПробег - {car['mileage']}км'
+        
+    else:
+        text = 'У пользователя нет автомобилей.\n'
+    await message.answer(text, reply_markup = kb.main_kb)
+    await state.clear()
+    
     
 @user.message(F.text == 'Настройки')
 async def settings_cmd(message: Message):

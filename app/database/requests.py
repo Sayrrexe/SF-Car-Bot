@@ -49,15 +49,24 @@ async def get_all_user_nots_per_year(tg_id: int):
 
 async def delete_car_by_model(tg_id: int, message):
     message = message.split(' ')
-    print(message)
     if len(message) < 2:
         return False
     brand, model = message[0], message[1]
-    print(brand, model)
     user = await User.get(tg_id = tg_id)
     car = await Car.get(user=user, brand=brand, model=model).first()
-    print(car)
     if car:
         await car.delete()
         return True
+    return False
+
+async def get_car_by_model(tg_id: int, message):
+    message = str(message).split(' ')
+    if len(message) < 2:
+        return False
+    brand, model = message[0], message[1]
+    
+    user = await User.get(tg_id = tg_id)
+    car = await Car.filter(user=user, brand = brand, model = model).values("brand", "model", "year", "engine", "mileage")
+    if car:
+        return car
     return False
