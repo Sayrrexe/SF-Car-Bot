@@ -64,12 +64,14 @@ async def get_car_by_model(tg_id: int, message):
     if len(message) < 2:
         return False
     brand, model = message[0], message[1]
-    
-    user = await User.get(tg_id = tg_id)
-    car = await Car.filter(user=user, brand = brand, model = model).values("brand", "model", "year", "engine", "mileage")
-    if car:
-        return car
-    return False
+    try:
+        user = await User.get(tg_id = tg_id)
+        car = await Car.filter(user=user, brand = brand, model = model).values("brand", "model", "year", "engine", "mileage")
+        if car:
+            return car
+        return False
+    except: 
+        return False
 
 async def create_notes(data):
     try:

@@ -7,6 +7,7 @@ from app.database.requests import create_user, create_car, get_all_user_cars, ge
 import app.keyboards as kb
 import app.states as st
 
+# TODO перенести добавление расписания в настройки, переписать правильные профиль пользователя
 
 user = Router()
 
@@ -158,4 +159,4 @@ async def notes_add_final(message: Message, state: FSMContext):
     data = await state.get_data()
     await create_notes(data=data)
     await message.answer(f'Заметка о покупке товара {data.get('title')} создана.')
-    await state.clear()
+    await state.clear() 
