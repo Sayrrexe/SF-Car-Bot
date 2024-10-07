@@ -70,3 +70,18 @@ async def get_car_by_model(tg_id: int, message):
     if car:
         return car
     return False
+
+async def create_notes(data):
+    try:
+        user = await User.get(tg_id=data['id'])
+        # Создаем объект Car
+        notes = await Notes.create(
+            user=user, # передача внешнего ключа объекта модели User
+            created_date=data['created_date'],
+            price=data['price'],
+            title=data['title'],
+        )
+    except DoesNotExist:
+        return
+    except Exception as e:
+        return
