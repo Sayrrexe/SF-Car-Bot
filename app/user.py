@@ -74,9 +74,14 @@ async def create_auto_mileage(message: Message, state: FSMContext):
     
 # ----- МЕНЮ -----------
 @user.message(Command('menu'))
-async def menu_cmd(message: Message):
+async def menu_cmd(message: Message, state: FSMContext):
+    await state.clear()
     await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру', reply_markup= kb.main_kb)
     
+@user.message(F.text == 'Меню')
+async def menu_text_cmd(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру', reply_markup= kb.main_kb)
 # ----- ПРОФИЛЬ -----------
 @user.message(F.text == 'Профиль')
 async def profile_cmd(message: Message, state: FSMContext):
@@ -138,13 +143,13 @@ async def notes_tittle_add(message: Message, state: FSMContext):
     await  message.answer('Введите названия купленного товара для авто:')
 
 @user.message(st.CreateNotesFSM.title)
-async def notes_add(message: Message, state: FSMContext):
+async def notes_add_coast(message: Message, state: FSMContext):
     await state.update_data(id = message.from_user.id, title = message.text)
     await state.set_state(st.CreateNotesFSM.price)
     await  message.answer('Введите стоимость этого товара:')
 
 @user.message(st.CreateNotesFSM.price)
-async def notes_add(message: Message, state: FSMContext):
+async def notes_add_final(message: Message, state: FSMContext):
     try:
         await state.update_data(price = int (message.text))
     except ValueError:
@@ -153,3 +158,4 @@ async def notes_add(message: Message, state: FSMContext):
     data = await state.get_data()
     await create_notes(data=data)
     await message.answer(f'Заметка о покупке товара {data.get('title')} создана.')
+    await state.clear()

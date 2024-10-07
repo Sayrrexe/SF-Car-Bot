@@ -29,11 +29,13 @@ async def profile_kb(tg_id):
         model = car['model']
         keyboard.add(KeyboardButton(text=f'{brand} {model}'))
     keyboard.add(KeyboardButton(text='Покупки'))
+    keyboard.add(KeyboardButton(text='Меню'))
     return keyboard.adjust(1).as_markup(resize_keyboard=True)
 
 settings_kb = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Удалить Авто')],
-    [KeyboardButton(text='Добавить Авто')]
+    [KeyboardButton(text='Добавить Авто')],
+    [KeyboardButton(text='Меню')]
 ],
                            resize_keyboard=True,
                            input_field_placeholder='Выберите пункт меню.')
