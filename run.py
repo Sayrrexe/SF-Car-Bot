@@ -4,6 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tortoise import Tortoise
 
 from app.user import user
@@ -26,7 +27,9 @@ async def startup(dispatcher: Dispatcher):
     await Tortoise.init(db_url=DB_URL, modules={"models": ["app.database.models"]})
     await Tortoise.generate_schemas()
 
-    asyncio.create_task(check_reminders())
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(check_reminders, 'interval', hours=24) 
+    scheduler.start()
     # logging.debug('включенно')
 
 
