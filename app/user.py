@@ -90,6 +90,30 @@ async def profile_cmd(message: Message, state: FSMContext):
     await message.answer(f'Профиль пользователя: {message.from_user.username}\n\n{cars}\nТраты на автомобиль за год: {expenses}', reply_markup=await kb.profile_kb(message.from_user.id))
     await state.set_state(st.ProfileUserFSM.car)
     
+# ----- ДОБАВЛЕНИЕ ЗАМЕТКИ -----------
+@user.message(F.text  == 'Создать заметку о расходах')
+async def notes_tittle_add(message: Message, state: FSMContext):
+    await state.clear()
+    await state.set_state(st.CreateNotesFSM.title)
+    await  message.answer('Введите названия купленного товара для авто:')
+
+@user.message(st.CreateNotesFSM.title)
+async def notes_add(message: Message, state: FSMContext):
+    await state.update_data(id = message.from_user.id, title = message.text, created_date=datetime.now())
+    await state.set_state(st.CreateNotesFSM.price)
+    await  message.answer('Введите стоимость этого товара:')
+
+@user.message(st.CreateNotesFSM.price)
+async def notes_add(message: Message, state: FSMContext):
+    try:
+        await state.update_data(price = int (message.text))
+    except ValueError:
+        await message.answer('Введен неверный формат цены. Повторите ввод: ')
+        return
+    data = await state.get_data()
+    await create_notes(data=data)
+    await message.answer(f'Заметка о покупке товара {data.get('title')} создана.')
+
 @user.message(st.ProfileUserFSM.car)
 async def settings_car_fsm(message: Message, state: FSMContext):
     text = message.text
