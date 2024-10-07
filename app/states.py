@@ -17,3 +17,9 @@ class CarDeleteFSM(StatesGroup):
 
 class ProfileUserFSM(StatesGroup):
     car = State()
+
+class CreateNotesFSM(StatesGroup):
+    user =  State()
+    created_date =  State()
+    price =  State()
+    title =  State()
