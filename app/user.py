@@ -3,7 +3,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-from app.database.requests import create_user, create_car, get_all_user_cars, get_all_user_nots_per_year, delete_car_by_model, get_car_by_model
+from app.database.requests import create_user, create_car, get_all_user_cars, get_all_user_nots_per_year, delete_car_by_model, get_car_by_model, create_notes
 import app.keyboards as kb
 import app.states as st
 
@@ -11,17 +11,19 @@ import app.states as st
 user = Router()
 
 
-
+# ----- ОБРАБОТКА /start -----------
 @user.message(CommandStart())
 async def cmd_start(message: Message):
     await create_user(message.from_user.id, message.from_user.username)
     await message.answer('Добро пожаловать в бот!\nУзнате список всех команд с помощью /help\nНажмите на кнопку что бы добавить характеристики вашего авто', reply_markup=kb.start_kb)
 
+# ----- RETURN_CALLBACK -----------
 @user.callback_query(F.data == 'return_callback')
 async def return_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.answer('Вы в главном меню!')
     
+# ----- ДОБАВЛЕНИЕ АВТО В БАЗУ -----------    
 @user.message(F.text == 'Добавить Авто')
 async def message_car_add(message: Message, state: FSMContext):
     await message.answer('Для добавления вашего авто пожалуйста введите его марку вашего авто', reply_markup=kb.return_kb)
@@ -70,10 +72,12 @@ async def create_auto_mileage(message: Message, state: FSMContext):
     await state.clear()
     await message.answer('Автомобиль добавлен!', reply_markup=kb.main_kb)
     
+# ----- МЕНЮ -----------
 @user.message(Command('menu'))
 async def menu_cmd(message: Message):
     await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру', reply_markup= kb.main_kb)
     
+# ----- ПРОФИЛЬ -----------
 @user.message(F.text == 'Профиль')
 async def profile_cmd(message: Message, state: FSMContext):
     car = await get_all_user_cars(message.from_user.id)
@@ -90,30 +94,6 @@ async def profile_cmd(message: Message, state: FSMContext):
     await message.answer(f'Профиль пользователя: {message.from_user.username}\n\n{cars}\nТраты на автомобиль за год: {expenses}', reply_markup=await kb.profile_kb(message.from_user.id))
     await state.set_state(st.ProfileUserFSM.car)
     
-# ----- ДОБАВЛЕНИЕ ЗАМЕТКИ -----------
-@user.message(F.text  == 'Создать заметку о расходах')
-async def notes_tittle_add(message: Message, state: FSMContext):
-    await state.clear()
-    await state.set_state(st.CreateNotesFSM.title)
-    await  message.answer('Введите названия купленного товара для авто:')
-
-@user.message(st.CreateNotesFSM.title)
-async def notes_add(message: Message, state: FSMContext):
-    await state.update_data(id = message.from_user.id, title = message.text, created_date=datetime.now())
-    await state.set_state(st.CreateNotesFSM.price)
-    await  message.answer('Введите стоимость этого товара:')
-
-@user.message(st.CreateNotesFSM.price)
-async def notes_add(message: Message, state: FSMContext):
-    try:
-        await state.update_data(price = int (message.text))
-    except ValueError:
-        await message.answer('Введен неверный формат цены. Повторите ввод: ')
-        return
-    data = await state.get_data()
-    await create_notes(data=data)
-    await message.answer(f'Заметка о покупке товара {data.get('title')} создана.')
-
 @user.message(st.ProfileUserFSM.car)
 async def settings_car_fsm(message: Message, state: FSMContext):
     text = message.text
@@ -130,7 +110,7 @@ async def settings_car_fsm(message: Message, state: FSMContext):
     await message.answer(text, reply_markup = kb.main_kb)
     await state.clear()
     
-    
+# ----- НАСТРОЙКИ ----------- 
 @user.message(F.text == 'Настройки')
 async def settings_cmd(message: Message):
     await message.answer('Выберите действие', reply_markup=kb.settings_kb)
@@ -149,3 +129,27 @@ async def delete_car_fsm(message: Message, state: FSMContext):
         await message.answer('Авто не найдено или уже удалено.')
     await state.clear()  # Завершить состояние
     await message.answer('Вы в главном меню', reply_markup=kb.main_kb)
+
+# ----- ДОБАВЛЕНИЕ ЗАМЕТКИ ----------- 
+@user.message(F.text  == 'Создать заметку о расходах')
+async def notes_tittle_add(message: Message, state: FSMContext):
+    await state.clear()
+    await state.set_state(st.CreateNotesFSM.title)
+    await  message.answer('Введите названия купленного товара для авто:')
+
+@user.message(st.CreateNotesFSM.title)
+async def notes_add(message: Message, state: FSMContext):
+    await state.update_data(id = message.from_user.id, title = message.text)
+    await state.set_state(st.CreateNotesFSM.price)
+    await  message.answer('Введите стоимость этого товара:')
+
+@user.message(st.CreateNotesFSM.price)
+async def notes_add(message: Message, state: FSMContext):
+    try:
+        await state.update_data(price = int (message.text))
+    except ValueError:
+        await message.answer('Введен неверный формат цены. Повторите ввод: ')
+        return
+    data = await state.get_data()
+    await create_notes(data=data)
+    await message.answer(f'Заметка о покупке товара {data.get('title')} создана.')
