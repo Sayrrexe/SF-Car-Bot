@@ -2,16 +2,19 @@ services:
   car_bot:
     image: sf-car-bot:latest
     deploy:
-      replicas: 3
+      replicas: 1
       restart_policy:
         condition: on-failure
-    environment:
-      - TOKEN=${TOKEN}
-      - DB_URL=${DB_URL}
+    env_file:
+      - .env
     networks:
       - car_bot_network
     volumes:
-      - media/cars:/app/media/cars
+      - media_cars:/app/media/cars
+
+volumes:
+  media_cars: 
+    driver: local
 
 networks:
   car_bot_network:

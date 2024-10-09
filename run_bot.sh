@@ -26,6 +26,7 @@ fi
 
 # Step 3: Deploy to Docker Swarm
 echo "Deploying to Docker Swarm..."
+docker swarm init
 docker stack deploy -c docker-compose.yml car_bot_stack
 
 if [ $? -eq 0 ]; then

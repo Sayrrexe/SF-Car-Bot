@@ -1,23 +1,4 @@
-# Бот для автовладельцев
-быстрый старт:
-создайте виртуальное окружение:
-
-	python -m venv .venv
- 
-войдите в него:
-Windows:
-
-	.venv/Scripts/activate
-
-Unix-systems:
-
-	source .venv/bin/activate
-
-Установите зависимости:
-
-	pip install -r requirements.txt
-
-
+# The car owner bot
 
 
 ## Run bot using Docker
@@ -60,30 +41,37 @@ For Ubuntu or Debian-based distributions, you can use the following commands:
 ---------------------------------------------------------------------------------
 For other Linux distributions, please refer to the official Docker installation documentation.
 
+Start docker and enable docker (unix system):
+``bash``
+    sudo systemctl start docker
+    sudo systemctl enable docker
+
+Manage Docker as a Non-Root User:
+``bash``
+    sudo usermod -aG docker ${USER}
+
+
 ### Building the Docker Image
 
 Open a terminal and navigate to the directory containing the project.
-Run the following command to build the Docker image:
+Run the following commands to start bot:
+
+Create file with env TOKEN and DB_URD:
+``bash``
+    touch .env
+
+Edit right for running scripr:
+``bash``
+    chmod +x run_bot.sh
+
+Run script:
 
 ``bash``
 
-	docker build -t my-aiogram-bot .
-
-Running the Bot
-
-Run the Docker container with the following command:
-
-``bash``
-
-	docker run -d --name my-aiogram-bot-container 
-
+    ./run_bot.sh	
 
 Verify that the container is running:
 
 ``bash``
 
-	docker ps
-
- 
-bd - https://app.creately.com/d/YX0TxokiOIM/edit
-
+	docker service ls

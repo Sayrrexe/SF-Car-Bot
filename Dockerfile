@@ -21,6 +21,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
-RUN python -m aerich migrate && python -m aerich upgrade
+RUN aerich init -t config.TORTOISE_ORM  
+RUN aerich init-db
 
 CMD ["python", "run.py"]
