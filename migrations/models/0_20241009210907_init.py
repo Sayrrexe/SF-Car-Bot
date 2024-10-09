@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS "car" (
     "year" INT NOT NULL,
     "engine" VARCHAR(255) NOT NULL,
     "mileage" BIGINT NOT NULL,
+    "image" VARCHAR(255),
     "user_id" INT NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS "notes" (
@@ -35,7 +36,7 @@ CREATE TABLE IF NOT EXISTS "purchases" (
 CREATE TABLE IF NOT EXISTS "reminders" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "created_at" TIMESTAMP NOT NULL  DEFAULT CURRENT_TIMESTAMP,
-    "total_date" TIMESTAMP NOT NULL,
+    "total_date" DATE NOT NULL,
     "text" TEXT NOT NULL,
     "user_id" INT NOT NULL REFERENCES "user" ("id") ON DELETE CASCADE
 );

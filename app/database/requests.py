@@ -1,14 +1,15 @@
+import logging
+
 from tortoise.exceptions import DoesNotExist
 from datetime import datetime, timedelta
-from tortoise.functions import Sum
 
-from app.database.models import User, Car, Notes
+from app.database.models import User, Car, Notes, Reminders
 
 
-async def create_user(
-    tg_id: int,
-    username: str = None,
-):
+logger = logging.getLogger(__name__)
+
+
+async def create_user(tg_id: int, username: str = None):
     user = await User.get_or_create(tg_id=tg_id, username=username)
     return
 
@@ -16,18 +17,21 @@ async def create_user(
 async def create_car(data):
     try:
         user = await User.get(tg_id=data["id"])
-        # Создаем объект Car
-        car = await Car.create(
-            user=user,  # Передаем объект User
+
+        await Car.create(
+            user=user,
             brand=data["brand"],
             model=data["model"],
             year=data["year"],
             engine=data["engine"],
             mileage=data["mileage"],
+            image=data.get("image", None),
         )
     except DoesNotExist:
+        logger.error("User does not exist.")
         return
     except Exception as e:
+        logger.error(f"Error creating car: {e}")
         return
 
 
@@ -77,7 +81,7 @@ async def get_car_by_model(tg_id: int, message):
 
     user = await User.get(tg_id=tg_id)
     car = await Car.filter(user=user, brand=brand, model=model).values(
-        "brand", "model", "year", "engine", "mileage"
+        "brand", "model", "year", "engine", "mileage", "image"
     )
     if car:
         return car
@@ -87,12 +91,26 @@ async def get_car_by_model(tg_id: int, message):
 async def create_notes(data):
     try:
         user = await User.get(tg_id=data["id"])
-        # Создаем объект Car
         notes = await Notes.create(
-            user=user,  # передача внешнего ключа объекта модели User
+            user=user,
             created_date=data["created_date"],
             price=data["price"],
             title=data["title"],
+        )
+    except DoesNotExist:
+        return
+    except Exception as e:
+        return
+
+
+async def create_reminder(data):
+    try:
+        user = await User.get(tg_id=data["id"])
+        reminders = await Reminders.create(
+            user=user,
+            created_at=data["created_at"],
+            total_date=data["total_date"],
+            text=data["text"],
         )
     except DoesNotExist:
         return

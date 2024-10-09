@@ -26,6 +26,7 @@ class Car(Model):
     year = fields.IntField()
     engine = fields.CharField(max_length=255)
     mileage = fields.BigIntField()
+    image = fields.CharField(max_length=255, null=True)
 
 
 class Purchases(Model):
@@ -54,9 +55,7 @@ class Reminders(Model):
         "models.User", related_name="reminders", on_delete=fields.CASCADE
     )
     created_at = fields.DatetimeField(auto_now_add=True)
-    total_date = fields.DatetimeField(
-        default=lambda: datetime.now() + timedelta(days=180)
-    )
+    total_date = fields.DateField()
     text = fields.TextField()
 
 

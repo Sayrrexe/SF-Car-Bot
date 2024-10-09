@@ -1,7 +1,12 @@
+import logging
+from datetime import datetime, timedelta
+
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
+
+from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback, get_user_locale
 
 from app.database.requests import (
     create_user,
@@ -11,10 +16,13 @@ from app.database.requests import (
     delete_car_by_model,
     get_car_by_model,
     create_notes,
+    create_reminder,
 )
 import app.keyboards as kb
 import app.states as st
 
+
+logger = logging.getLogger(__name__)
 
 user = Router()
 
@@ -40,7 +48,7 @@ async def return_callback(callback: CallbackQuery, state: FSMContext):
 @user.message(F.text == "Добавить Авто")
 async def message_car_add(message: Message, state: FSMContext):
     await message.answer(
-        "Для добавления вашего авто пожалуйста введите его марку вашего авто",
+        "Для добавления вашего авто пожалуйста введите марку вашего авто",
         reply_markup=kb.return_kb,
     )
     await state.set_state(st.CreateAutoFSM.brand)
@@ -50,7 +58,7 @@ async def message_car_add(message: Message, state: FSMContext):
 async def cq_car_add(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.message.answer(
-        "Для добавления вашего авто пожалуйста введите его марку вашего авто",
+        "Пожалуйста введите марку вашего авто",
         reply_markup=kb.return_kb,
     )
     await state.set_state(st.CreateAutoFSM.brand)
@@ -75,12 +83,14 @@ async def create_auto_model(message: Message, state: FSMContext):
     text = message.text
     try:
         text = int(text)
+        if text < 1885 or text > datetime.now().year:
+            raise ValueError
         await state.update_data(year=text)
-        await message.answer("Введите объём вашего мотора", reply_markup=kb.return_kb)
+        await message.answer("Введите объём двигателя", reply_markup=kb.return_kb)
         await state.set_state(st.CreateAutoFSM.engine)
     except:
         await message.answer(
-            "Год должен быть в формате числа, попроуйте ещё раз",
+            "Год должен быть в формате числа, попробуйте ещё раз",
             reply_markup=kb.return_kb,
         )
         return
@@ -88,20 +98,55 @@ async def create_auto_model(message: Message, state: FSMContext):
 
 @user.message(st.CreateAutoFSM.engine)
 async def create_auto_engine(message: Message, state: FSMContext):
-    await state.update_data(engine=message.text)
-    await message.answer(
-        "Почти у цели!\nВведите пробег вашего авто в киллометрах(укажите только число)",
-        reply_markup=kb.return_kb,
-    )
-    await state.set_state(st.CreateAutoFSM.mileage)
+    text = message.text
+    try:
+        text = float(text)
+        if text < 0 or text > 10:
+            raise ValueError
+        await state.update_data(engine=message.text)
+        await message.answer(
+            "Почти у цели!\nВведите пробег вашего авто в киллометрах(укажите только число)",
+            reply_markup=kb.return_kb,
+        )
+        await state.set_state(st.CreateAutoFSM.mileage)
+    except:
+        await message.answer(
+            "Объем двигателя не подходит, попробуйте ещё раз",
+            reply_markup=kb.return_kb,
+        )
+        return
 
 
 @user.message(st.CreateAutoFSM.mileage)
 async def create_auto_mileage(message: Message, state: FSMContext):
     await state.update_data(mileage=message.text)
+    await message.answer(
+        "Хотите загрузить изображение вашего авто? Пришлите файл или пропустите этот шаг, нажав /skip.",
+        reply_markup=kb.return_kb,
+    )
+    await state.set_state(st.CreateAutoFSM.image)
+
+
+@user.message(F.text == "/skip")
+async def skip_image(message: Message, state: FSMContext):
     await create_car(data=await state.get_data())
     await state.clear()
-    await message.answer("Автомобиль добавлен!", reply_markup=kb.main_kb)
+    await message.answer(
+        "Автомобиль добавлен без изображения!", reply_markup=kb.main_kb
+    )
+
+
+@user.message(st.CreateAutoFSM.image)
+async def create_auto_image(message: Message, state: FSMContext):
+    file_name = f"media/cars/{message.from_user.id}_{message.photo[-1].file_id}.jpg"
+
+    await message.bot.download(file=message.photo[-1].file_id, destination=file_name)
+
+    await state.update_data(image=file_name)
+
+    await create_car(data=await state.get_data())
+    await state.clear()
+    await message.answer("Автомобиль и изображение добавлены!", reply_markup=kb.main_kb)
 
 
 # ----- МЕНЮ -----------
@@ -116,19 +161,33 @@ async def menu_cmd(message: Message):
 # ----- ПРОФИЛЬ -----------
 @user.message(F.text == "Профиль")
 async def profile_cmd(message: Message, state: FSMContext):
-    car = await get_all_user_cars(message.from_user.id)
+    cars = await get_all_user_cars(message.from_user.id)
     expenses = await get_all_user_nots_per_year(message.from_user.id)
-    cars = f"Автомобили:\n"
-    if car:
-        for car in car:
+
+    cars_text = "Автомобили:\n"
+    if cars:
+        for car in cars:
             brand = car["brand"]
             model = car["model"]
             year = car["year"]
-            cars += f"- {brand} {model} | год выпуска: {year}\n"
+            image = car.get("image", None)
+
+            car_info = f"- {brand} {model} | год выпуска: {year}\n"
+            cars_text += car_info
+
+            if image:
+                try:
+                    logger.info(f"{image}")
+                    await message.answer_photo(
+                        photo=FSInputFile(image, filename="Car"), caption=cars_text
+                    )
+                except FileNotFoundError:
+                    await message.answer(f"Картинка не найдена для {brand} {model}")
     else:
-        cars = "У пользователя нет автомобилей.\n"
+        cars_text = "У пользователя нет автомобилей.\n"
+
     await message.answer(
-        f"Профиль пользователя: {message.from_user.username}\n\n{cars}\nТраты на автомобиль за год: {expenses}",
+        f"Профиль пользователя: {message.from_user.username}\n\n{cars_text}\nТраты на автомобиль за год: {expenses}",
         reply_markup=await kb.profile_kb(message.from_user.id),
     )
     await state.set_state(st.ProfileUserFSM.car)
@@ -138,16 +197,40 @@ async def profile_cmd(message: Message, state: FSMContext):
 async def settings_car_fsm(message: Message, state: FSMContext):
     text = message.text
     if text == "Отмена":
-        state.clear()
+        await state.clear()
         await message.answer("Выберите пункт меню", reply_markup=await kb.main_kb)
+        return
+
     cars = await get_car_by_model(message.from_user.id, text)
+
     if cars:
         for car in cars:
-            text = f"Автомобиль {car['brand']} {car['model']}:\n\nПроизводитель - {car['brand']}\nМодель - {car['model']}\nГод выпуска - {car['year']}\nОбъём мотора - {car['engine']}\nПробег - {car['mileage']}км"
+            car_info = (
+                f"Автомобиль {car['brand']} {car['model']}:\n\n"
+                f"Производитель - {car['brand']}\n"
+                f"Модель - {car['model']}\n"
+                f"Год выпуска - {car['year']}\n"
+                f"Объём двигателя - {car['engine']}\n"
+                f"Пробег - {car['mileage']}км"
+            )
 
+            image = car.get("image", None)
+
+            if image:
+                try:
+                    logger.info(f"{image}")
+                    await message.answer_photo(
+                        photo=FSInputFile(image, filename="Car"), caption=car_info
+                    )
+                except FileNotFoundError:
+                    await message.answer(
+                        f"Изображение не найдено для {car['brand']} {car['model']}"
+                    )
+            else:
+                await message.answer(car_info, reply_markup=kb.main_kb)
     else:
-        text = "У пользователя нет автомобилей.\n"
-    await message.answer(text, reply_markup=kb.main_kb)
+        await message.answer("У пользователя нет автомобилей.", reply_markup=kb.main_kb)
+
     await state.clear()
 
 
@@ -202,3 +285,49 @@ async def notes_add(message: Message, state: FSMContext):
     data = await state.get_data()
     await create_notes(data=data)
     await message.answer(f"Заметка о покупке товара {data.get('title')} создана.")
+
+
+# ------ ДОБАВЛЕНИЕ НАПОМИНАНИЯ -------------
+@user.message(F.text.lower() == "создать напоминание")
+async def start_add_reminder(message: Message):
+    await message.answer(
+        "Выберите дату напоминания в пределах от 1 до 365 дней:",
+        reply_markup=await SimpleCalendar(
+            locale=await get_user_locale(message.from_user)
+        ).start_calendar(),
+    )
+
+
+@user.callback_query(SimpleCalendarCallback.filter())
+async def choose_total_date_reminder(
+    callback_query: CallbackQuery,
+    callback_data: SimpleCalendarCallback,
+    state: FSMContext,
+):
+    await state.clear()
+    calendar = SimpleCalendar(
+        locale=await get_user_locale(callback_query.from_user), show_alerts=True
+    )
+
+    early_date = datetime.now() + timedelta(days=1)  # ранняя дата напоминания (завтра)
+    late_date = datetime.now() + timedelta(days=365)  # поздняя дата (через год)
+
+    calendar.set_dates_range(early_date, late_date)
+    selected, date = await calendar.process_selection(callback_query, callback_data)
+
+    if selected:
+        await state.set_state(st.CreateRemindersFSM.text)
+        await state.update_data(
+            total_date=date, id=callback_query.from_user.id, created_at=datetime.now()
+        )
+        await callback_query.message.answer(f'Выбрана дата {date.strftime("%d/%m/%Y")}')
+        await callback_query.message.answer("Введите текст: ")
+
+
+@user.message(st.CreateRemindersFSM.text)
+async def add_text_and_final_reminder(message: Message, state: FSMContext):
+    await state.update_data(text=message.text)
+    data = await state.get_data()
+    await create_reminder(data)
+    await message.answer("Напоминание добавлено успешно!")
+    await state.clear()

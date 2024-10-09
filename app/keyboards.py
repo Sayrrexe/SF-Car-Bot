@@ -5,7 +5,9 @@ from aiogram.types import (
     InlineKeyboardButton,
 )
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+
 from app.database.requests import get_all_user_cars
+
 
 # клавиатуры для сообщений
 start_kb = InlineKeyboardMarkup(
