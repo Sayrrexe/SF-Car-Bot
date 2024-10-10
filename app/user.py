@@ -22,6 +22,9 @@ import app.keyboards as kb
 import app.states as st
 
 # TODO перенести добавление расписания в настройки, переписать правильные профиль пользователя
+# TODO убрать возможность задать пробег не числом
+# TODO фикс вывода трат
+# TODO 
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +163,7 @@ async def menu_cmd(message: Message, state: FSMContext):
 async def menu_text_cmd(message: Message, state: FSMContext):
     await state.clear()
     await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру', reply_markup= kb.main_kb)
+    
 # ----- ПРОФИЛЬ -----------
 @user.message(F.text == "Профиль")
 async def profile_cmd(message: Message, state: FSMContext):
@@ -234,12 +238,10 @@ async def settings_car_fsm(message: Message, state: FSMContext):
         await message.answer("У пользователя нет такого авто.", reply_markup=kb.main_kb)
     await state.clear()
 
-
 # ----- НАСТРОЙКИ -----------
-@user.message(F.text == "Настройки")
+@user.message(Command('settings'))
 async def settings_cmd(message: Message):
     await message.answer("Выберите действие", reply_markup=kb.settings_kb)
-
 
 @user.message(F.text == "Удалить Авто")
 async def delete_car_cmd(message: Message, state: FSMContext):
@@ -248,7 +250,6 @@ async def delete_car_cmd(message: Message, state: FSMContext):
         reply_markup=await kb.all_cars_kb(message.from_user.id),
     )
     await state.set_state(st.CarDeleteFSM.car)
-
 
 @user.message(st.CarDeleteFSM.car)
 async def delete_car_fsm(message: Message, state: FSMContext):
@@ -260,7 +261,6 @@ async def delete_car_fsm(message: Message, state: FSMContext):
     await state.clear()  # Завершить состояние
     await message.answer("Вы в главном меню", reply_markup=kb.main_kb)
 
-
 # ----- ДОБАВЛЕНИЕ ЗАМЕТКИ -----------
 @user.message(F.text == "Создать заметку о расходах")
 async def notes_tittle_add(message: Message, state: FSMContext):
@@ -269,14 +269,12 @@ async def notes_tittle_add(message: Message, state: FSMContext):
     await message.answer("Введите названия купленного товара для авто:",
         reply_markup=kb.return_kb)
 
-
 @user.message(st.CreateNotesFSM.title)
 async def notes_add_coast(message: Message, state: FSMContext):
     await state.update_data(id = message.from_user.id, title = message.text)
     await state.set_state(st.CreateNotesFSM.price)
     await message.answer("Введите стоимость этого товара:",
         reply_markup=kb.return_kb)
-
 
 @user.message(st.CreateNotesFSM.price)
 async def notes_add_final(message: Message, state: FSMContext):
@@ -302,7 +300,6 @@ async def start_add_reminder(message: Message):
             locale=await get_user_locale(message.from_user)
         ).start_calendar(),
     )
-
 
 @user.callback_query(SimpleCalendarCallback.filter())
 async def choose_total_date_reminder(

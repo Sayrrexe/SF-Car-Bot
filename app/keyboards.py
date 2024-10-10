@@ -27,12 +27,10 @@ main_kb = ReplyKeyboardMarkup(
         [KeyboardButton(text="Создать заметку о расходах")],
         [KeyboardButton(text="Добавить продукт в избранное")],
         [KeyboardButton(text="Создать Напоминание")],
-        [KeyboardButton(text="Профиль"), KeyboardButton(text="Настройки")],
+        [KeyboardButton(text="Профиль")]
     ],
     resize_keyboard=True,
-    input_field_placeholder="Выберите пункт меню.",
-)
-
+    input_field_placeholder="Выберите пункт меню.",)
 
 async def profile_kb(tg_id):
     cars = await get_all_user_cars(tg_id)
@@ -45,16 +43,13 @@ async def profile_kb(tg_id):
     keyboard.add(KeyboardButton(text="Меню"))
     return keyboard.adjust(1).as_markup(resize_keyboard=True)
 
-
 settings_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Удалить Авто")],
         [KeyboardButton(text="Добавить Авто")],
     ],
     resize_keyboard=True,
-    input_field_placeholder="Выберите пункт меню.",
-)
-
+    input_field_placeholder="Выберите пункт меню.",)
 
 async def all_cars_kb(tg_id):
     cars = await get_all_user_cars(tg_id)
