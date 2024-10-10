@@ -6,9 +6,9 @@ from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-<<<<<<< HEAD
+
 from app.database.requests import create_user, create_car
-=======
+
 from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback, get_user_locale
 
 from app.database.requests import (
@@ -21,7 +21,7 @@ from app.database.requests import (
     create_notes,
     create_reminder,
 )
->>>>>>> 69d77fafa307a24adad86e6d1fee3c264992c247
+
 import app.keyboards as kb
 import app.states as st
 
@@ -35,12 +35,12 @@ user = Router()
 # ----- ОБРАБОТКА /start -----------
 @user.message(CommandStart())
 async def cmd_start(message: Message):
-<<<<<<< HEAD
+
     await create_user(message.from_user.id, message.from_user.username) # добавление пользователя в бд
     await message.answer('Добро пожаловать в бот!\nУзнате список всех команд с помощью /help\nНажмите на кнопку что бы добавить характеристики вашего авто', reply_markup=kb.start_kb)
     
 @user.callback_query(F.data == 'car_add_callback')
-=======
+async def call_start_menu(message: Message):
     await create_user(message.from_user.id, message.from_user.username)
     await message.answer(
         "Добро пожаловать в бот!\nУзнате список всех команд с помощью /help\nНажмите на кнопку что бы добавить характеристики вашего авто",
@@ -66,7 +66,6 @@ async def message_car_add(message: Message, state: FSMContext):
 
 
 @user.callback_query(F.data == "car_add_callback")
->>>>>>> 69d77fafa307a24adad86e6d1fee3c264992c247
 async def cq_car_add(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.message.answer(
@@ -74,22 +73,16 @@ async def cq_car_add(callback: CallbackQuery, state: FSMContext):
         reply_markup=kb.return_kb,
     )
     await state.set_state(st.CreateAutoFSM.brand)
-<<<<<<< HEAD
-    
 @user.callback_query(F.data == 'return_callback')
 async def return_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.answer('Вы в главном меню!')
-=======
-
->>>>>>> 69d77fafa307a24adad86e6d1fee3c264992c247
 
 @user.message(st.CreateAutoFSM.brand)
 async def create_auto_brand(message: Message, state: FSMContext):
     await state.update_data(brand=message.text, id=message.from_user.id)
     await message.answer("Введите модель вашего авто", reply_markup=kb.return_kb)
     await state.set_state(st.CreateAutoFSM.model)
-
 
 @user.message(st.CreateAutoFSM.model)
 async def create_auto_model(message: Message, state: FSMContext):
@@ -118,7 +111,6 @@ async def create_auto_model(message: Message, state: FSMContext):
 
 @user.message(st.CreateAutoFSM.engine)
 async def create_auto_engine(message: Message, state: FSMContext):
-<<<<<<< HEAD
     await state.update_data(engine = message.text)
     await message.answer('Почти у цели!\nВведите пробег вашего авто', reply_markup=kb.return_kb)
     await state.set_state(st.CreateAutoFSM.mileage)
@@ -127,7 +119,7 @@ async def create_auto_engine(message: Message, state: FSMContext):
 async def create_auto_mileage(message: Message, state: FSMContext):
     await state.update_data(mileage = message.text)
     await create_car(data = await state.get_data())
-=======
+
     text = message.text
     try:
         text = float(text)
@@ -145,7 +137,6 @@ async def create_auto_mileage(message: Message, state: FSMContext):
             reply_markup=kb.return_kb,
         )
         return
-
 
 @user.message(st.CreateAutoFSM.mileage)
 async def create_auto_mileage(message: Message, state: FSMContext):
@@ -366,4 +357,4 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
     await create_reminder(data)
     await message.answer("Напоминание добавлено успешно!")
     await state.clear()
->>>>>>> 69d77fafa307a24adad86e6d1fee3c264992c247
+
