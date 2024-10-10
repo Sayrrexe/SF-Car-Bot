@@ -294,10 +294,8 @@ async def notes_add_final(message: Message, state: FSMContext):
 async def start_add_reminder(message: Message):
     await message.answer(
         "Выберите дату напоминания в пределах от 1 до 365 дней:",
-        reply_markup=await SimpleCalendar(
-            locale=await get_user_locale(message.from_user)
-        ).start_calendar(),
-    )
+        reply_markup=await SimpleCalendar(locale="en_US.utf8").start_calendar()
+        )
 
 
 @user.callback_query(SimpleCalendarCallback.filter())
@@ -307,9 +305,7 @@ async def choose_total_date_reminder(
     state: FSMContext,
 ):
     await state.clear()
-    calendar = SimpleCalendar(
-        locale=await get_user_locale(callback_query.from_user), show_alerts=True
-    )
+    calendar = SimpleCalendar(locale="en_US.utf8")
 
     early_date = datetime.now() + timedelta(days=1)  # ранняя дата напоминания (завтра)
     late_date = datetime.now() + timedelta(days=365)  # поздняя дата (через год)
