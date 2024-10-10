@@ -45,7 +45,7 @@ async def create_auto_brand(message: Message, state: FSMContext):
 @user.message(st.CreateAutoFSM.model)
 async def create_auto_model(message: Message, state: FSMContext):
     await state.update_data(model = message.text)
-    await message.answer('ВВедите год выпуска авто', reply_markup=kb.return_kb)
+    await message.answer('Введите год выпуска авто', reply_markup=kb.return_kb)
     await state.set_state(st.CreateAutoFSM.year)
     
 @user.message(st.CreateAutoFSM.year)
