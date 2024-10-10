@@ -42,7 +42,7 @@ async def cmd_start(message: Message):
 @user.callback_query(F.data == "return_callback")
 async def return_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    await callback.answer("Вы в главном меню!")
+    await callback.message.answer('Вы в главном меню', reply_markup = kb.main_kb)
 
 
 # ----- ДОБАВЛЕНИЕ АВТО В БАЗУ -----------
@@ -226,13 +226,12 @@ async def settings_car_fsm(message: Message, state: FSMContext):
                     )
                 except FileNotFoundError:
                     await message.answer(
-                        f"Изображение не найдено для {car['brand']} {car['model']}"
+                        f"Изображение не найдено для {car['brand']} {car['model']}", reply_markup=kb.main_kb
                     )
             else:
                 await message.answer(car_info, reply_markup=kb.main_kb)
     else:
-        await message.answer("У пользователя нет автомобилей.", reply_markup=kb.main_kb)
-
+        await message.answer("У пользователя нет такого авто.", reply_markup=kb.main_kb)
     await state.clear()
 
 
@@ -267,14 +266,16 @@ async def delete_car_fsm(message: Message, state: FSMContext):
 async def notes_tittle_add(message: Message, state: FSMContext):
     await state.clear()
     await state.set_state(st.CreateNotesFSM.title)
-    await message.answer("Введите названия купленного товара для авто:")
+    await message.answer("Введите названия купленного товара для авто:",
+        reply_markup=kb.return_kb)
 
 
 @user.message(st.CreateNotesFSM.title)
 async def notes_add_coast(message: Message, state: FSMContext):
     await state.update_data(id = message.from_user.id, title = message.text)
     await state.set_state(st.CreateNotesFSM.price)
-    await message.answer("Введите стоимость этого товара:")
+    await message.answer("Введите стоимость этого товара:",
+        reply_markup=kb.return_kb)
 
 
 @user.message(st.CreateNotesFSM.price)
@@ -282,16 +283,18 @@ async def notes_add_final(message: Message, state: FSMContext):
     try:
         await state.update_data(price=int(message.text))
     except ValueError:
-        await message.answer("Введен неверный формат цены. Повторите ввод: ")
+        await message.answer("Введен неверный формат цены. Повторите ввод: ",
+        reply_markup=kb.return_kb)
         return
     data = await state.get_data()
     await create_notes(data=data)
-    await message.answer(f"Заметка о покупке товара {data.get('title')} создана.")
+    await message.answer(f"Заметка о покупке товара {data.get('title')} создана.",
+        reply_markup=kb.return_kb)
     await state.clear()
 
 
 # ------ ДОБАВЛЕНИЕ НАПОМИНАНИЯ -------------
-@user.message(F.text.lower() == "создать напоминание")
+@user.message(F.text.lower() == "Создать Напоминание")
 async def start_add_reminder(message: Message):
     await message.answer(
         "Выберите дату напоминания в пределах от 1 до 365 дней:",

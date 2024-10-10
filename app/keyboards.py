@@ -42,6 +42,7 @@ async def profile_kb(tg_id):
         model = car["model"]
         keyboard.add(KeyboardButton(text=f"{brand} {model}"))
     keyboard.add(KeyboardButton(text="Покупки"))
+    keyboard.add(KeyboardButton(text="Меню"))
     return keyboard.adjust(1).as_markup(resize_keyboard=True)
 
 
