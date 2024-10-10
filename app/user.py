@@ -287,6 +287,7 @@ async def notes_add_final(message: Message, state: FSMContext):
     data = await state.get_data()
     await create_notes(data=data)
     await message.answer(f"Заметка о покупке товара {data.get('title')} создана.")
+    await state.clear()
 
 
 # ------ ДОБАВЛЕНИЕ НАПОМИНАНИЯ -------------
