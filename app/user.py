@@ -21,6 +21,7 @@ from app.database.requests import (
 import app.keyboards as kb
 import app.states as st
 
+# TODO перенести добавление расписания в настройки, переписать правильные профиль пользователя
 
 logger = logging.getLogger(__name__)
 
@@ -150,14 +151,15 @@ async def create_auto_image(message: Message, state: FSMContext):
 
 
 # ----- МЕНЮ -----------
-@user.message(Command("menu"))
-async def menu_cmd(message: Message):
-    await message.answer(
-        "Вы в главном меню!\nВыберите действие используя встроенную клавиатуру",
-        reply_markup=kb.main_kb,
-    )
-
-
+@user.message(Command('menu'))
+async def menu_cmd(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру', reply_markup= kb.main_kb)
+    
+@user.message(F.text == 'Меню')
+async def menu_text_cmd(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру', reply_markup= kb.main_kb)
 # ----- ПРОФИЛЬ -----------
 @user.message(F.text == "Профиль")
 async def profile_cmd(message: Message, state: FSMContext):
@@ -269,14 +271,14 @@ async def notes_tittle_add(message: Message, state: FSMContext):
 
 
 @user.message(st.CreateNotesFSM.title)
-async def notes_add(message: Message, state: FSMContext):
-    await state.update_data(id=message.from_user.id, title=message.text)
+async def notes_add_coast(message: Message, state: FSMContext):
+    await state.update_data(id = message.from_user.id, title = message.text)
     await state.set_state(st.CreateNotesFSM.price)
     await message.answer("Введите стоимость этого товара:")
 
 
 @user.message(st.CreateNotesFSM.price)
-async def notes_add(message: Message, state: FSMContext):
+async def notes_add_final(message: Message, state: FSMContext):
     try:
         await state.update_data(price=int(message.text))
     except ValueError:
