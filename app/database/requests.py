@@ -1,15 +1,15 @@
-<<<<<<< HEAD
+
 from app.database.models import User, Car
 from tortoise.exceptions import DoesNotExist
-=======
+
 import logging
 
 from tortoise.exceptions import DoesNotExist
 from datetime import datetime, timedelta
 
 from app.database.models import User, Car, Notes, Reminders
->>>>>>> 69d77fafa307a24adad86e6d1fee3c264992c247
 
+#commit 1
 
 logger = logging.getLogger(__name__)
 
