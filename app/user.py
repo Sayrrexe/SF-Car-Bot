@@ -334,3 +334,59 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
     await create_reminder(data)
     await message.answer("Напоминание добавлено успешно!")
     await state.clear()
+
+# ------ ДОБАВЛЕНИЕ ИНТЕРЕСНЫХ ПОКУПОК -------------
+@user.message(F.text == "Добавить продукт в избранное")
+async def purchases_cmd(message: Message, state: FSMContext):
+    if message.text == 'пропустить':
+        await state.clear()
+        await message.answer("Вы возвращены в меню", reply_markup=await kb.main_kb)
+        return
+    await message.answer('Добавление интересной покупки в ваш личный список, это поможет вам в будущем вспмнить, какой товар вы покупали')
+    await state.set_state(st.CreatePurchasesFSM.text)
+    await message.answer("Введите всё нужную информацию о товаре ( цена будет отдельно ):",
+        reply_markup=kb.skip_kb)
+
+@user.message(st.CreatePurchasesFSM.text)
+async def purchases_add_text(message: Message, state: FSMContext):
+    if message.text == 'пропустить':
+        await state.clear()
+        await message.answer("Вы возвращены в меню", reply_markup=await kb.main_kb)
+        return
+    await state.update_data(id = message.from_user.id, text = message.text)
+    await state.set_state(st.CreatePurchasesFSM.price)
+    await message.answer("Введите стоимость этого товара:",
+        reply_markup=kb.skip_kb)
+
+@user.message(st.CreatePurchasesFSM.price)
+async def purchases_add_price(message: Message, state: FSMContext):
+    if message.text == 'пропустить':
+        await state.clear()
+        await message.answer("Вы возвращены в меню", reply_markup=await kb.main_kb)
+        return
+    try:
+        await state.update_data(price=int(message.text))
+    except ValueError:
+        await message.answer("Введен неверный формат цены. Повторите ввод( цена указывается в формате полного числа ): ",
+        reply_markup=kb.skip_kb)
+        return
+    await state.set_state(st.CreatePurchasesFSM.image)
+    await message.answer("Пришлите фото этого товара:",
+        reply_markup=kb.skip_kb)
+    
+@user.message(st.CreatePurchasesFSM.image)
+async def purchases_add_image(message: Message, state: FSMContext):
+    if message.text == 'пропустить':
+        await state.clear()
+        await message.answer("Вы возвращены в меню", reply_markup=await kb.main_kb)
+        return
+    
+    file_name = f"media/purchases/{message.from_user.id}_{message.photo[-1].file_id}.jpg"
+    await message.bot.download(file=message.photo[-1].file_id, destination=file_name)
+    
+    await state.update_data(image=file_name)
+
+    # TODO await create_purchase(data=await state.get_data())
+    await state.clear()
+    await message.answer("Покупка добавлена", reply_markup=kb.main_kb)
+    

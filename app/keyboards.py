@@ -60,3 +60,9 @@ async def all_cars_kb(tg_id):
         keyboard.add(KeyboardButton(text=f"{brand} {model}"))
     keyboard.add(KeyboardButton(text="Отмена"))
     return keyboard.adjust(1).as_markup(resize_keyboard=True)
+
+skip_kb = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="пропустить")],
+        [KeyboardButton(text="Меню")]
+],      resize_keyboard=True,
+        input_field_placeholder="Напишите или выберите 'пропустить'",)

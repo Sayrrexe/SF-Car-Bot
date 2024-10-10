@@ -37,7 +37,7 @@ class CreateRemindersFSM(StatesGroup):
 
 
 class CreatePurchasesFSM(StatesGroup):
-    user = State()
-    image = State()
+    id = State()
     text = State()
     price = State()
+    image = State()
