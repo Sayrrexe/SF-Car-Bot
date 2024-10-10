@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from tortoise.models import Model
 from tortoise import fields
 
@@ -19,17 +21,23 @@ class User(Model):
     def __str__(self):
         return self.username
 
+
 class Car(Model):
     id = fields.IntField(primary_key=True)
-    user = fields.ForeignKeyField('models.User', related_name='cars', on_delete=fields.CASCADE)
+    user = fields.ForeignKeyField(
+        "models.User", related_name="cars", on_delete=fields.CASCADE
+    )
     brand = fields.CharField(max_length=255)
     model = fields.CharField(max_length=255)
     year = fields.IntField()
     engine = fields.CharField(max_length=255)
     mileage = fields.BigIntField()
-    
+    image = fields.CharField(max_length=255, null=True)
+
+
 class Purchases(Model):
     id = fields.IntField(primary_key=True)
+<<<<<<< HEAD
     user = fields.ForeignKeyField('models.User', related_name='purchases', on_delete=fields.CASCADE)
     image = fields.TextField()
     text = fields.TextField()
@@ -42,15 +50,40 @@ class Notes(Model):
     price = fields.DecimalField(max_digits=10, decimal_places=2)
     title = fields.CharField(max_length=255)
     
+=======
+    user = fields.ForeignKeyField(
+        "models.User", related_name="purchases", on_delete=fields.CASCADE
+    )
+    image = fields.TextField(null=True)
+    text = fields.TextField(null=True)
+    price = fields.DecimalField(max_digits=16, decimal_places=2, null=True)
+
+
+class Notes(Model):
+    id = fields.IntField(primary_key=True)
+    user = fields.ForeignKeyField(
+        "models.User", related_name="notes", on_delete=fields.CASCADE
+    )
+    created_date = fields.DatetimeField(auto_now=True)
+    price = fields.DecimalField(max_digits=10, decimal_places=2, null=True)
+    title = fields.CharField(max_length=255, null=True)
+
+
+>>>>>>> 69d77fafa307a24adad86e6d1fee3c264992c247
 class Reminders(Model):
     id = fields.IntField(primary_key=True)
-    user = fields.ForeignKeyField('models.User', related_name='reminders', on_delete=fields.CASCADE)
+    user = fields.ForeignKeyField(
+        "models.User", related_name="reminders", on_delete=fields.CASCADE
+    )
     created_at = fields.DatetimeField(auto_now_add=True)
     total_date = fields.DateField()
     text = fields.TextField()
-    
+
+
 class Service(Model):
     id = fields.IntField(pk=True)
-    car = fields.ForeignKeyField('models.Car', related_name='services', on_delete=fields.CASCADE)
+    car = fields.ForeignKeyField(
+        "models.Car", related_name="services", on_delete=fields.CASCADE
+    )
     type = fields.CharField(max_length=2, choices=TYPE_CHOICES)
-    date = fields.DatetimeField(auto_now = True)
+    date = fields.DatetimeField(auto_now=True)
