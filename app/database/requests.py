@@ -140,7 +140,6 @@ async def create_reminder(data): # создание напоминания
 async def create_purchase(data):# создание покупки
     try:
         user = await User.get(tg_id=data["id"])
-        print(data)
         await Purchases.create(
             user=user,
             image=data.get("image", None),
