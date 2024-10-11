@@ -1,7 +1,5 @@
 from aiogram.fsm.state import State, StatesGroup
 
-# Для состояний
-
 
 class CreateAutoFSM(StatesGroup):
     user = State()
@@ -24,7 +22,6 @@ class ProfileUserFSM(StatesGroup):
 
 class CreateNotesFSM(StatesGroup):
     user = State()
-    created_date = State()
     price = State()
     title = State()
 

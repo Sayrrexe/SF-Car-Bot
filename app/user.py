@@ -6,7 +6,7 @@ from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback, get_user_locale
+from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback
 
 from app.database.requests import (
     create_user,
@@ -17,14 +17,12 @@ from app.database.requests import (
     get_car_by_model,
     create_notes,
     create_reminder,
+    get_user_notes
 )
 import app.keyboards as kb
 import app.states as st
 
-# TODO перенести добавление расписания в настройки, переписать правильные профиль пользователя
-# TODO убрать возможность задать пробег не числом
-# TODO фикс вывода трат
-# TODO 
+# TODO реализовать вывод всех покупок в профиле
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +103,7 @@ async def create_auto_engine(message: Message, state: FSMContext):
     text = message.text
     try:
         text = float(text)
-        if text < 0 or text > 10:
+        if text < 0 or text > 20:
             raise ValueError
         await state.update_data(engine=message.text)
         await message.answer(
@@ -123,13 +121,18 @@ async def create_auto_engine(message: Message, state: FSMContext):
 
 @user.message(st.CreateAutoFSM.mileage)
 async def create_auto_mileage(message: Message, state: FSMContext):
-    await state.update_data(mileage=message.text)
-    await message.answer(
-        "Хотите загрузить изображение вашего авто? Пришлите файл или пропустите этот шаг, нажав /skip.",
-        reply_markup=kb.return_kb,
-    )
-    await state.set_state(st.CreateAutoFSM.image)
-
+    text = message.text
+    try:
+        text = int(text)
+        await state.update_data(mileage=message.text)
+        await message.answer(
+            "Хотите загрузить изображение вашего авто? Пришлите файл или пропустите этот шаг, нажав /skip.",
+            reply_markup=kb.return_kb,
+        )
+        await state.set_state(st.CreateAutoFSM.image)
+    except:
+        await message.answer('Введите пробег в формате числа без лишних символов!', reply_markup = kb.return_kb)
+        
 
 @user.message(F.text == "/skip")
 async def skip_image(message: Message, state: FSMContext):
@@ -204,8 +207,14 @@ async def settings_car_fsm(message: Message, state: FSMContext):
     text = message.text
     if text == "Отмена":
         await state.clear()
-        await message.answer("Выберите пункт меню", reply_markup=await kb.main_kb)
+        await message.answer("Выберите пункт меню", reply_markup=kb.main_kb)
         return
+    if text == 'Список покупок':
+        message_note = await get_user_notes(tg_id=message.from_user.id)
+        await message.answer(f'Список ваших покупок:\n{message_note}', reply_markup=kb.main_kb)
+        await state.clear()
+        return
+        
 
     cars = await get_car_by_model(message.from_user.id, text)
 
@@ -287,7 +296,7 @@ async def notes_add_final(message: Message, state: FSMContext):
     data = await state.get_data()
     await create_notes(data=data)
     await message.answer(f"Заметка о покупке товара {data.get('title')} создана.",
-        reply_markup=kb.return_kb)
+        reply_markup = kb.main_kb)
     await state.clear()
 
 
