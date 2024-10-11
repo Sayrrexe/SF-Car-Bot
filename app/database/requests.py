@@ -3,7 +3,7 @@ import logging
 from tortoise.exceptions import DoesNotExist
 from datetime import datetime, timedelta
 
-from app.database.models import User, Car, Notes, Reminders
+from app.database.models import User, Car, Notes, Reminders, Purchases
 
 
 logger = logging.getLogger(__name__)
@@ -114,7 +114,10 @@ async def get_user_notes(tg_id):# получить все заметки пол�
         return "У вас нет заметок."
 
     # Форматируем вывод заметок
-    notes_list = [f"{note.created_date.strftime('%Y-%m-%d')} : {note.title} - {note.price}" for note in recent_notes]
+    notes_list = [
+        f"{note.created_date.strftime('%Y-%m-%d')} : {note.title} - {int(note.price)} ₽." 
+        for note in recent_notes
+    ]
     return "\n".join(notes_list)
 
 
@@ -132,3 +135,22 @@ async def create_reminder(data): # создание напоминания
         return
     except Exception as e:
         return
+    
+# ------- Покупки ---------  
+async def create_purchase(data):# создание покупки
+    try:
+        user = await User.get(tg_id=data["id"])
+        print(data)
+        await Purchases.create(
+            user=user,
+            image=data.get("image", None),
+            text=data["text"],
+            price=data["price"],
+        )
+    except DoesNotExist:
+        logger.error("User does not exist.")
+        return
+    except Exception as e:
+        logger.error(f"Error creating car: {e}")
+        return
+    

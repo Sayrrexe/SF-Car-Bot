@@ -17,7 +17,8 @@ from app.database.requests import (
     get_car_by_model,
     create_notes,
     create_reminder,
-    get_user_notes
+    get_user_notes,
+    create_purchase,
 )
 import app.keyboards as kb
 import app.states as st
@@ -347,10 +348,6 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
 # ------ ДОБАВЛЕНИЕ ИНТЕРЕСНЫХ ПОКУПОК -------------
 @user.message(F.text == "Добавить продукт в избранное")
 async def purchases_cmd(message: Message, state: FSMContext):
-    if message.text == 'пропустить':
-        await state.clear()
-        await message.answer("Вы возвращены в меню", reply_markup=await kb.main_kb)
-        return
     await message.answer('Добавление интересной покупки в ваш личный список, это поможет вам в будущем вспмнить, какой товар вы покупали')
     await state.set_state(st.CreatePurchasesFSM.text)
     await message.answer("Введите всё нужную информацию о товаре ( цена будет отдельно ):",
@@ -359,10 +356,10 @@ async def purchases_cmd(message: Message, state: FSMContext):
 @user.message(st.CreatePurchasesFSM.text)
 async def purchases_add_text(message: Message, state: FSMContext):
     if message.text == 'пропустить':
-        await state.clear()
-        await message.answer("Вы возвращены в меню", reply_markup=await kb.main_kb)
-        return
-    await state.update_data(id = message.from_user.id, text = message.text)
+        await message.answer("Вы пропустили этот шаг!", reply_markup=kb.main_kb)
+        await state.update_data(id = message.from_user.id, text = None)
+    else:
+        await state.update_data(id = message.from_user.id, text = message.text)
     await state.set_state(st.CreatePurchasesFSM.price)
     await message.answer("Введите стоимость этого товара:",
         reply_markup=kb.skip_kb)
@@ -370,15 +367,14 @@ async def purchases_add_text(message: Message, state: FSMContext):
 @user.message(st.CreatePurchasesFSM.price)
 async def purchases_add_price(message: Message, state: FSMContext):
     if message.text == 'пропустить':
-        await state.clear()
-        await message.answer("Вы возвращены в меню", reply_markup=await kb.main_kb)
-        return
-    try:
-        await state.update_data(price=int(message.text))
-    except ValueError:
-        await message.answer("Введен неверный формат цены. Повторите ввод( цена указывается в формате полного числа ): ",
-        reply_markup=kb.skip_kb)
-        return
+        await message.answer("Вы пропустили этот шаг!", reply_markup=kb.main_kb)
+        await state.update_data(price=None)
+    else:
+        try:
+            await state.update_data(price=int(message.text))
+        except ValueError:
+            await message.answer("Введен неверный формат цены. Повторите ввод( цена указывается в формате полного числа ): ",reply_markup=kb.skip_kb)
+            return
     await state.set_state(st.CreatePurchasesFSM.image)
     await message.answer("Пришлите фото этого товара:",
         reply_markup=kb.skip_kb)
@@ -386,16 +382,13 @@ async def purchases_add_price(message: Message, state: FSMContext):
 @user.message(st.CreatePurchasesFSM.image)
 async def purchases_add_image(message: Message, state: FSMContext):
     if message.text == 'пропустить':
-        await state.clear()
-        await message.answer("Вы возвращены в меню", reply_markup=await kb.main_kb)
-        return
-    
-    file_name = f"media/purchases/{message.from_user.id}_{message.photo[-1].file_id}.jpg"
-    await message.bot.download(file=message.photo[-1].file_id, destination=file_name)
-    
-    await state.update_data(image=file_name)
-
-    # TODO await create_purchase(data=await state.get_data())
+        await message.answer("Вы пропустили этот шаг!", reply_markup=kb.main_kb)
+        await create_purchase(data=await state.get_data())
+    else:
+        file_name = f"media/purchases/{message.from_user.id}_{message.photo[-1].file_id}.jpg"
+        await message.bot.download(file=message.photo[-1].file_id, destination=file_name)
+        await state.update_data(image=file_name)
+        await create_purchase(data=await state.get_data())
     await state.clear()
     await message.answer("Покупка добавлена", reply_markup=kb.main_kb)
     
