@@ -391,5 +391,6 @@ $RECYCLE.BIN/
 localssl.*
 
 test.py
+TEST.py
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,pycharm,python,vim,visualstudiocode,git

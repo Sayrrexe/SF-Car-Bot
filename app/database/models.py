@@ -3,14 +3,8 @@ from datetime import timedelta
 from tortoise.models import Model
 from tortoise import fields
 
-from config import DB_URL
+from config import TYPE_CHOICES
 
-TYPE_CHOICES = [
-        ('OL', 'OIL'), # масло
-        ('FL', 'filter'), # фильтр
-        ('SP', 'Support'), # тормозные колодки
-        ('FS', 'Full Service'), # полное ТО
-    ]
 
 class User(Model):
     id = fields.IntField(primary_key=True)
@@ -19,7 +13,7 @@ class User(Model):
     created_at = fields.DatetimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.username
+        return self.username or self.tg_id
 
 
 class Car(Model):
@@ -37,20 +31,6 @@ class Car(Model):
 
 class Purchases(Model):
     id = fields.IntField(primary_key=True)
-<<<<<<< HEAD
-    user = fields.ForeignKeyField('models.User', related_name='purchases', on_delete=fields.CASCADE)
-    image = fields.TextField()
-    text = fields.TextField()
-    price = fields.DecimalField(max_digits=16, decimal_places=2)
-    
-class Notes(Model):
-    id = fields.IntField(primary_key=True)
-    user = fields.ForeignKeyField('models.User', related_name='notes', on_delete=fields.CASCADE)
-    created_date = fields.DatetimeField(auto_now = True)
-    price = fields.DecimalField(max_digits=10, decimal_places=2)
-    title = fields.CharField(max_length=255)
-    
-=======
     user = fields.ForeignKeyField(
         "models.User", related_name="purchases", on_delete=fields.CASCADE
     )
@@ -69,7 +49,6 @@ class Notes(Model):
     title = fields.CharField(max_length=255, null=True)
 
 
->>>>>>> 69d77fafa307a24adad86e6d1fee3c264992c247
 class Reminders(Model):
     id = fields.IntField(primary_key=True)
     user = fields.ForeignKeyField(

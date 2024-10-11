@@ -1,6 +1,5 @@
-from aiogram.fsm.state import State, StatesGroup
 
-# Для состояний
+from aiogram.fsm.state import State, StatesGroup
 
 
 class CreateAutoFSM(StatesGroup):
@@ -10,8 +9,6 @@ class CreateAutoFSM(StatesGroup):
     year = State()
     engine = State()
     mileage = State()
-<<<<<<< HEAD
-=======
     image = State()
 
 
@@ -26,7 +23,6 @@ class ProfileUserFSM(StatesGroup):
 
 class CreateNotesFSM(StatesGroup):
     user = State()
-    created_date = State()
     price = State()
     title = State()
 
@@ -39,8 +35,7 @@ class CreateRemindersFSM(StatesGroup):
 
 
 class CreatePurchasesFSM(StatesGroup):
-    user = State()
-    image = State()
+    id = State()
     text = State()
     price = State()
->>>>>>> 69d77fafa307a24adad86e6d1fee3c264992c247
+    image = State()
