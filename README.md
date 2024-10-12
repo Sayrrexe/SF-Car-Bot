@@ -3,6 +3,7 @@
 
 ## Run bot using Docker
 
+	pip install -r requirements.txt
 
 ## Installing Docker
 
