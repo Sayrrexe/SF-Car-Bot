@@ -1,4 +1,5 @@
 import logging
+
 from datetime import datetime, timedelta
 
 from aiogram import Router, F
@@ -21,6 +22,7 @@ from app.database.requests import (
     create_reminder,
     get_user_notes,
     create_purchase,
+    get_user_purchases,
 )
 import app.keyboards as kb
 import app.states as st
@@ -49,6 +51,10 @@ async def cmd_start(message: Message):
 async def return_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.message.answer('Вы в главном меню', reply_markup=kb.main_kb)
+    
+@user.callback_query(F.data == "ignore")
+async def ignore_callback(callback_query: CallbackQuery):
+    await callback_query.answer()
 
 
 # ----- ДОБАВЛЕНИЕ АВТО В БАЗУ -----------
@@ -358,10 +364,14 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
 
 
 # ------ ДОБАВЛЕНИЕ ИНТЕРСНЫХ ПОКУПОК -------------
-@user.message(F.text == "Добавить продукт в избранное")
+@user.message(F.text == "Избранное")
 async def purchases_cmd(message: Message, state: FSMContext):
     await message.answer(
-        'Добавление интересной покупки в ваш личный список, это поможет вам в будущем вспмнить, какой товар вы покупали')
+        'Добавление интересной покупки в ваш личный список, это поможет вам в будущем вспмнить, какой товар вы покупали', reply_markup=kb.favorites_kb)
+    
+    
+@user.message(F.text == "Добавить товар в избранное")
+async def purchases_cmd(message: Message, state: FSMContext):
     await state.set_state(st.CreatePurchasesFSM.text)
     await message.answer("Введите всё нужную информацию о товаре ( цена будет отдельно ):",
                          reply_markup=kb.skip_kb)
@@ -410,3 +420,57 @@ async def purchases_add_image(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Покупка добавлена", reply_markup=kb.main_kb)
 
+# ------ Вывод избранных покупок -------------
+@user.message(F.text == "Мои товары") # после команды обрабатывает пользователя и генерирует пагинацию
+async def purchases_cmd(message: Message, state: FSMContext):
+    purchases = await get_user_purchases(message.from_user.id)
+    if not purchases:
+        await message.answer("У вас нет сохранённых покупок.")
+        return
+    
+    # Сохраняем индекс текущей покупки в состояние
+    await state.update_data(current_purchase=0)
+
+    # Выводим первую покупку
+    await show_purchase(message, purchases[0], 0, len(purchases))
+    
+async def show_purchase(message: Message, purchase, current_index, total_count): # универсальная функция для вывода
+    text = (
+        f"Покупка: {purchase.text}\n"
+        f"Цена: {purchase.price} ₽\n\n"
+    )
+    
+    if purchase.image:
+        try:
+            await message.answer_photo(photo=FSInputFile(purchase.image, filename="Car"), caption=text, reply_markup=await kb.get_pagination_keyboard(current_index, total_count))
+        except Exception as e:
+            await message.answer(f"Столкнулись с ошибкой: {e}\n возможно картинка вашего товара была удалена, хотите удалить товар?")
+    else:
+        await message.answer(
+            text, 
+            reply_markup=await kb.get_pagination_keyboard(current_index, total_count)
+        )
+    
+@user.callback_query(F.data.startswith("prev_") | F.data.startswith("next_"))
+async def pagination_handler(callback_query: CallbackQuery, state: FSMContext):
+    data = callback_query.data.split("_")
+    direction = data[0]
+    current_index = int(data[1])
+    await callback_query.message.delete()
+    # Получаем покупки пользователя из базы данных
+    user = callback_query.from_user
+    purchases = await get_user_purchases(user.id)
+    
+    if direction == "prev":
+        new_index = current_index - 1
+    else:
+        new_index = current_index + 1
+    
+    # Обновляем индекс в состоянии
+    await state.update_data(current_purchase=new_index)
+    
+    # Отображаем новую покупку
+    await show_purchase(callback_query.message, purchases[new_index], new_index, len(purchases))
+    
+    # Убираем уведомление о нажатии кнопки
+    await callback_query.answer()

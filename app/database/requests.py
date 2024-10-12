@@ -157,3 +157,8 @@ async def create_purchase(data):  # создание покупки
     except Exception as e:
         logger.error(f"Error creating car: {e}")
         return
+    
+async def get_user_purchases(user_id): # Запрашиваем все покупки пользователя
+    user = await User.get(tg_id=user_id)
+    purchases = await Purchases.filter(user = user).all()  
+    return purchases
