@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import logging
 
 from tortoise.exceptions import DoesNotExist
@@ -38,42 +37,10 @@ async def create_car(data):  # создание авто
 
 
 async def get_all_user_cars(tg_id: int):  # получить все авто нужного пользователя
-=======
-from tortoise.exceptions import DoesNotExist
-from datetime import datetime, timedelta
-from tortoise.functions import Sum
-
-from app.database.models import User, Car, Notes
-
-
-async def create_user(tg_id: int, username: str = None, ):
-    user = await User.get_or_create(tg_id = tg_id, username = username)
-    return
-
-async def create_car(data):
-    try:
-        user = await User.get(tg_id=data['id'])
-        # Создаем объект Car
-        car = await Car.create(
-            user=user,  # Передаем объект User
-            brand=data['brand'],
-            model=data['model'],
-            year=data['year'],
-            engine=data['engine'],
-            mileage=data['mileage']
-        )
-    except DoesNotExist:
-        return
-    except Exception as e:
-        return
-    
-async def get_all_user_cars(tg_id: int):
->>>>>>> main
     # Получаем пользователя по tg_id
     user = await User.get(tg_id=tg_id)
 
     if not user:
-<<<<<<< HEAD
         return {"cars": []}
     # Получаем все автомобили пользователя
     cars = await Car.filter(user=user).values(
@@ -103,37 +70,12 @@ async def delete_car_by_model(tg_id: int, message):  # удалить авто �
         return False
     brand, model = message[0], message[1]
     user = await User.get(tg_id=tg_id)
-=======
-        return {"cars": [], "total_expenses": 0}
-
-    # Получаем все автомобили пользователя
-    cars = await Car.filter(user=user).values("brand", "model", "year", "engine", "mileage")
-    return cars
-    
-async def get_all_user_nots_per_year(tg_id: int):
-    # Получаем текущую дату и дату год назад
-    one_year_ago = datetime.now() - timedelta(days=365)
-    
-    user = await User.get(tg_id=tg_id)
-    
-    recent_notes = await Notes.filter(user=user, created_date__gte=one_year_ago).all()
-    total_expenses = sum(note.price for note in recent_notes if note.price is not None)
-    return total_expenses 
-
-async def delete_car_by_model(tg_id: int, message):
-    message = message.split(' ')
-    if len(message) < 2:
-        return False
-    brand, model = message[0], message[1]
-    user = await User.get(tg_id = tg_id)
->>>>>>> main
     car = await Car.get(user=user, brand=brand, model=model).first()
     if car:
         await car.delete()
         return True
     return False
 
-<<<<<<< HEAD
 
 # ------- ЗАМЕТКИ ---------
 async def create_notes(data):  # создание заметки
@@ -215,16 +157,3 @@ async def create_purchase(data):  # создание покупки
     except Exception as e:
         logger.error(f"Error creating car: {e}")
         return
-=======
-async def get_car_by_model(tg_id: int, message):
-    message = str(message).split(' ')
-    if len(message) < 2:
-        return False
-    brand, model = message[0], message[1]
-    
-    user = await User.get(tg_id = tg_id)
-    car = await Car.filter(user=user, brand = brand, model = model).values("brand", "model", "year", "engine", "mileage")
-    if car:
-        return car
-    return False
->>>>>>> main

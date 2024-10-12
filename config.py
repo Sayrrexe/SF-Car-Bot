@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
-DB_URL='sqlite://db.sqlite3'
+DB_URL=os.getenv("DB_URL")
 
 
 TYPE_CHOICES = [
