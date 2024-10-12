@@ -436,9 +436,9 @@ async def purchases_cmd(message: Message, state: FSMContext):
     
 async def show_purchase(message: Message, purchase, current_index, total_count): # универсальная функция для вывода
     text = (
-        f"Покупка: {purchase.text}\n"
-        f"Цена: {purchase.price} ₽\n\n"
-    )
+    f"Покупка: {purchase.text}\n"
+    f"Цена: {purchase.price:.2f} ₽\n\n"
+)
     
     if purchase.image:
         try:
