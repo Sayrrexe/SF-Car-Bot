@@ -1,17 +1,11 @@
-
-TOKEN='8086979841:AAHJbYtgpUzBfMaz4_GnL0WcoVE1Oc2h3BA'
-DB_URL='sqlite://db.sqlite3'
-
-# t.me/sf_car_bot
-
 import os
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
-# TOKEN = os.getenv("TOKEN")
-# DB_URL = os.getenv("DB_URL")
+TOKEN = os.getenv("TOKEN")
+DB_URL='sqlite://db.sqlite3'
+
 
 TYPE_CHOICES = [
     ("OL", "OIL"),  # масло
