@@ -6,7 +6,7 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
-from app.database.requests import get_all_user_cars
+from app.database.requests import get_all_user_cars, get_user_notes
 
 
 # клавиатуры для сообщений
@@ -50,8 +50,9 @@ async def profile_kb(tg_id):
     return keyboard.adjust(1).as_markup(resize_keyboard=True)
 
 settings_kb = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="Удалить Авто")],
-        [KeyboardButton(text="Добавить Авто")],
+        [KeyboardButton(text="Удалить Авто"),KeyboardButton(text="Добавить Авто")],
+        [KeyboardButton(text='Удалить заметку')]
+        
     ],
                                   resize_keyboard=True,
                                   input_field_placeholder="Выберите пункт меню.",)
@@ -95,4 +96,21 @@ async def get_pagination_keyboard(current_index, total_count):
     keyboard.adjust(3)
     return keyboard.as_markup()
 
+async def delete_user_notes_kb(tg_id):
+    notes = await get_user_notes(tg_id)
+    notes_list = notes.split('\n')
+    keyboard = InlineKeyboardBuilder()  # Создаем объект клавиатуры
+    
+    for note in notes_list:
+        text = note.split(' ')[2]
+        
+        keyboard.add(InlineKeyboardButton(text=note, callback_data=f'note_{text}'))
+    
+    keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return"))
+    return keyboard.adjust(1).as_markup()
 
+skip_kb = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="пропустить")],
+        [KeyboardButton(text="Меню")]
+],      resize_keyboard=True,
+        input_field_placeholder="Напишите или выберите 'пропустить'",)

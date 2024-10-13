@@ -23,6 +23,7 @@ from app.database.requests import (
     get_user_notes,
     create_purchase,
     get_user_purchases,
+    delete_note_by_title
 )
 import app.keyboards as kb
 import app.states as st
@@ -318,7 +319,27 @@ async def notes_add_final(message: Message, state: FSMContext):
     await message.answer(f"Заметка о покупке товара {data.get('title')} создана.",
                          reply_markup=kb.main_kb)
     await state.clear()
-
+    
+    
+@user.message(F.text == 'Удалить заметку')
+async def cmd_del_note(message: Message):
+    await message.answer('Выберите заметку для удаления', reply_markup= await 
+                         kb.delete_user_notes_kb(message.from_user.id))
+    
+    
+@user.callback_query(F.data.startswith("note_"))
+async def notes_delete_callback(callback_query: CallbackQuery,):
+    await callback_query.message.answer('Удаляем заметку...')
+    data = callback_query.data.split("_")[1]
+    print(data)
+    try:
+        await delete_note_by_title(callback_query.from_user.id, data)
+        await callback_query.message.delete()
+        await callback_query.message.answer(f'Удалили запись о трате на: {data}', reply_markup= kb.main_kb)
+    except:
+        await callback_query.message.delete()
+        await callback_query.message.answer('Удалить не получилось...\nПопробуйте сного, если не получится напишите /start', reply_markup=kb.settings_kb)
+    
 
 # ------ ДОБАВЛЕНИЕ НАПОМИНАНИЯ -------------
 @user.message(F.text.lower() == "создать напоминание")

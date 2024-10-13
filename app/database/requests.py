@@ -124,6 +124,17 @@ async def get_user_notes(tg_id):  # получить все заметки по�
     ]
     return "\n".join(notes_list)
 
+async def delete_note_by_title(tg_id: int, title):  # удалить авто по названию и пользователю
+    user = await User.get(tg_id=tg_id)
+    print(user)
+    if user:
+        note = await Notes.get(user=user, title=title).first()
+        print(note)
+        if note:
+            await note.delete()
+            return True
+    return False
+
 
 # ------- НАПОМИНАНИЯ ---------
 async def create_reminder(data):  # создание напоминания
