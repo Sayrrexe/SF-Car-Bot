@@ -331,7 +331,6 @@ async def cmd_del_note(message: Message):
 async def notes_delete_callback(callback_query: CallbackQuery,):
     await callback_query.message.answer('Удаляем заметку...')
     data = callback_query.data.split("_")[1]
-    print(data)
     try:
         await delete_note_by_title(callback_query.from_user.id, data)
         await callback_query.message.delete()
