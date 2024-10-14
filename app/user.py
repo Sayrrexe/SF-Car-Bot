@@ -25,16 +25,14 @@ from app.database.requests import (
     get_user_purchases,
     delete_note_by_title
 )
+
 import app.keyboards as kb
 import app.states as st
 
-# TODO реализовать вывод всех покупок в профиле
 
 logger = logging.getLogger(__name__)
 
 user = Router()
-
-
 
 
 # ----- ОБРАБОТКА /start -----------
@@ -53,7 +51,7 @@ async def return_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.message.answer('Вы в главном меню', reply_markup=kb.main_kb)
     
-@user.callback_query(F.data == "ignore")
+@user.callback_query(F.data == "ignore") # Для кнопок которые ничего не делают
 async def ignore_callback(callback_query: CallbackQuery):
     await callback_query.answer()
 
