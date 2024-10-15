@@ -86,7 +86,7 @@ async def create_auto_brand(message: Message, state: FSMContext):
 @user.message(st.CreateAutoFSM.model)
 async def create_auto_model(message: Message, state: FSMContext):
     await state.update_data(model=message.text)
-    await message.answer("ВВедите год выпуска авто", reply_markup=kb.return_kb)
+    await message.answer("Введите год выпуска авто", reply_markup=kb.return_kb)
     await state.set_state(st.CreateAutoFSM.year)
 
 
@@ -338,7 +338,7 @@ async def notes_delete_callback(callback_query: CallbackQuery,):
         await callback_query.message.answer('Удалить не получилось...\nПопробуйте сного, если не получится напишите /start', reply_markup=kb.settings_kb)
     
 
-# ------ ДОБАВЛЕНИЕ НАПОМИНАНИЯ -------------
+# ------ НАПОМИНАНИЯ -------------
 @user.message(F.text.lower() == "создать напоминание")
 async def start_add_reminder(message: Message):
     await message.answer(
@@ -380,6 +380,14 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
     await message.answer(f'Напоминание о событии {data.get('text')} добавлено успешно!')
     await state.clear()
 
+@user.message(F.text == 'Удалить напоминание')
+async def delete_reminder_cmd(message: Message):
+    await message.answer('Нажмите на кнопку для удаления', reply_markup=await kb.delete_user_reminders_kb(tg_id=message.from_user.id))
+    
+@user.callback_query(F.data.startswith("reminder_"))
+async def delete_reminder_with_callback(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer('Удаляем...')
 
 # ------ ДОБАВЛЕНИЕ ИНТЕРСНЫХ ПОКУПОК -------------
 @user.message(F.text == "Избранное")

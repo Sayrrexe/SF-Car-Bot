@@ -150,6 +150,11 @@ async def create_reminder(data):  # создание напоминания
         return
     except Exception as e:
         return
+    
+async def get_user_reminders(tg_id):
+    user = await User.get(tg_id=tg_id)
+    reminders = await Reminders.filter(user = user).all()  
+    return reminders
 
 
 # ------- Покупки ---------

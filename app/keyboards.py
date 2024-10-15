@@ -6,7 +6,7 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
-from app.database.requests import get_all_user_cars, get_user_notes
+from app.database.requests import get_all_user_cars, get_user_notes, get_user_reminders
 
 
 # клавиатуры для сообщений
@@ -51,7 +51,7 @@ async def profile_kb(tg_id):
 
 settings_kb = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="Удалить Авто"),KeyboardButton(text="Добавить Авто")],
-        [KeyboardButton(text='Удалить заметку')]
+        [KeyboardButton(text='Удалить заметку'),KeyboardButton(text='Удалить напоминание')]
         
     ],
                                   resize_keyboard=True,
@@ -109,8 +109,15 @@ async def delete_user_notes_kb(tg_id):
     keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return"))
     return keyboard.adjust(1).as_markup()
 
-skip_kb = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="пропустить")],
-        [KeyboardButton(text="Меню")]
-],      resize_keyboard=True,
-        input_field_placeholder="Напишите или выберите 'пропустить'",)
+async def delete_user_reminders_kb(tg_id):
+    print(tg_id)
+    reminders = await get_user_reminders(tg_id)
+    print(reminders)
+    keyboard = InlineKeyboardBuilder()  # Создаем объект клавиатуры
+    for reminder in reminders:
+        text = f"{reminder.text} - {reminder.total_date}"
+        print(text)
+        keyboard.add(InlineKeyboardButton(text=text, callback_data=f'reminder_{reminder.text}&{reminder.total_date}'))
+    
+    keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return"))
+    return keyboard.adjust(1).as_markup()
