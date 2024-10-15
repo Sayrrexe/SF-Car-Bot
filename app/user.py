@@ -1,12 +1,15 @@
 import logging
 from datetime import datetime, timedelta
+import datetime as dt
 
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback, get_user_locale
+from app.calendar import NewCalendar
+
+from aiogram_calendar import SimpleCalendarCallback, SimpleCalendar
 
 from app.database.requests import (
     create_user,
@@ -17,11 +20,13 @@ from app.database.requests import (
     get_car_by_model,
     create_notes,
     create_reminder,
+    get_user_notes,
+    create_purchase,
 )
 import app.keyboards as kb
 import app.states as st
 
-# TODO перенести добавление расписания в настройки, переписать правильные профиль пользователя
+# TODO реализовать вывод всех покупок в профиле
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +47,7 @@ async def cmd_start(message: Message):
 @user.callback_query(F.data == "return_callback")
 async def return_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    await callback.answer("Вы в главном меню!")
+    await callback.message.answer("Вы в главном меню", reply_markup=kb.main_kb)
 
 
 # ----- ДОБАВЛЕНИЕ АВТО В БАЗУ -----------
@@ -102,7 +107,7 @@ async def create_auto_engine(message: Message, state: FSMContext):
     text = message.text
     try:
         text = float(text)
-        if text < 0 or text > 10:
+        if text < 0 or text > 20:
             raise ValueError
         await state.update_data(engine=message.text)
         await message.answer(
@@ -120,12 +125,20 @@ async def create_auto_engine(message: Message, state: FSMContext):
 
 @user.message(st.CreateAutoFSM.mileage)
 async def create_auto_mileage(message: Message, state: FSMContext):
-    await state.update_data(mileage=message.text)
-    await message.answer(
-        "Хотите загрузить изображение вашего авто? Пришлите файл или пропустите этот шаг, нажав /skip.",
-        reply_markup=kb.return_kb,
-    )
-    await state.set_state(st.CreateAutoFSM.image)
+    text = message.text
+    try:
+        text = int(text)
+        await state.update_data(mileage=message.text)
+        await message.answer(
+            "Хотите загрузить изображение вашего авто? Пришлите файл или пропустите этот шаг, нажав /skip.",
+            reply_markup=kb.return_kb,
+        )
+        await state.set_state(st.CreateAutoFSM.image)
+    except:
+        await message.answer(
+            "Введите пробег в формате числа без лишних символов!",
+            reply_markup=kb.return_kb,
+        )
 
 
 @user.message(F.text == "/skip")
@@ -151,15 +164,24 @@ async def create_auto_image(message: Message, state: FSMContext):
 
 
 # ----- МЕНЮ -----------
-@user.message(Command('menu'))
+@user.message(Command("menu"))
 async def menu_cmd(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру', reply_markup= kb.main_kb)
-    
-@user.message(F.text == 'Меню')
+    await message.answer(
+        "Вы в главном меню!\nВыберите действие используя встроенную клавиатуру",
+        reply_markup=kb.main_kb,
+    )
+
+
+@user.message(F.text == "Меню")
 async def menu_text_cmd(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру', reply_markup= kb.main_kb)
+    await message.answer(
+        "Вы в главном меню!\nВыберите действие используя встроенную клавиатуру",
+        reply_markup=kb.main_kb,
+    )
+
+
 # ----- ПРОФИЛЬ -----------
 @user.message(F.text == "Профиль")
 async def profile_cmd(message: Message, state: FSMContext):
@@ -200,7 +222,14 @@ async def settings_car_fsm(message: Message, state: FSMContext):
     text = message.text
     if text == "Отмена":
         await state.clear()
-        await message.answer("Выберите пункт меню", reply_markup=await kb.main_kb)
+        await message.answer("Выберите пункт меню", reply_markup=kb.main_kb)
+        return
+    if text == "Список покупок":
+        message_note = await get_user_notes(tg_id=message.from_user.id)
+        await message.answer(
+            f"Список ваших покупок:\n{message_note}", reply_markup=kb.main_kb
+        )
+        await state.clear()
         return
 
     cars = await get_car_by_model(message.from_user.id, text)
@@ -226,18 +255,18 @@ async def settings_car_fsm(message: Message, state: FSMContext):
                     )
                 except FileNotFoundError:
                     await message.answer(
-                        f"Изображение не найдено для {car['brand']} {car['model']}"
+                        f"Изображение не найдено для {car['brand']} {car['model']}",
+                        reply_markup=kb.main_kb,
                     )
             else:
                 await message.answer(car_info, reply_markup=kb.main_kb)
     else:
-        await message.answer("У пользователя нет автомобилей.", reply_markup=kb.main_kb)
-
+        await message.answer("У пользователя нет такого авто.", reply_markup=kb.main_kb)
     await state.clear()
 
 
 # ----- НАСТРОЙКИ -----------
-@user.message(F.text == "Настройки")
+@user.message(Command("settings"))
 async def settings_cmd(message: Message):
     await message.answer("Выберите действие", reply_markup=kb.settings_kb)
 
@@ -267,14 +296,16 @@ async def delete_car_fsm(message: Message, state: FSMContext):
 async def notes_tittle_add(message: Message, state: FSMContext):
     await state.clear()
     await state.set_state(st.CreateNotesFSM.title)
-    await message.answer("Введите названия купленного товара для авто:")
+    await message.answer(
+        "Введите названия купленного товара для авто:", reply_markup=kb.return_kb
+    )
 
 
 @user.message(st.CreateNotesFSM.title)
 async def notes_add_coast(message: Message, state: FSMContext):
-    await state.update_data(id = message.from_user.id, title = message.text)
+    await state.update_data(id=message.from_user.id, title=message.text)
     await state.set_state(st.CreateNotesFSM.price)
-    await message.answer("Введите стоимость этого товара:")
+    await message.answer("Введите стоимость этого товара:", reply_markup=kb.return_kb)
 
 
 @user.message(st.CreateNotesFSM.price)
@@ -282,11 +313,17 @@ async def notes_add_final(message: Message, state: FSMContext):
     try:
         await state.update_data(price=int(message.text))
     except ValueError:
-        await message.answer("Введен неверный формат цены. Повторите ввод: ")
+        await message.answer(
+            "Введен неверный формат цены. Повторите ввод: ", reply_markup=kb.return_kb
+        )
         return
     data = await state.get_data()
     await create_notes(data=data)
-    await message.answer(f"Заметка о покупке товара {data.get('title')} создана.")
+    await message.answer(
+        f"Заметка о покупке товара {data.get('title')} создана.",
+        reply_markup=kb.main_kb,
+    )
+    await state.clear()
 
 
 # ------ ДОБАВЛЕНИЕ НАПОМИНАНИЯ -------------
@@ -294,8 +331,8 @@ async def notes_add_final(message: Message, state: FSMContext):
 async def start_add_reminder(message: Message):
     await message.answer(
         "Выберите дату напоминания в пределах от 1 до 365 дней:",
-        reply_markup=await SimpleCalendar(locale="en_US.utf8").start_calendar()
-        )
+        reply_markup=await NewCalendar().start_calendar(),
+    )
 
 
 @user.callback_query(SimpleCalendarCallback.filter())
@@ -305,21 +342,42 @@ async def choose_total_date_reminder(
     state: FSMContext,
 ):
     await state.clear()
-    calendar = SimpleCalendar(locale="en_US.utf8")
 
-    early_date = datetime.now() + timedelta(days=1)  # ранняя дата напоминания (завтра)
+    calendar = NewCalendar()
+    calendar.show_alerts = True
+
+    early_date = datetime.now()  # ранняя дата напоминания (завтра)
     late_date = datetime.now() + timedelta(days=365)  # поздняя дата (через год)
 
     calendar.set_dates_range(early_date, late_date)
     selected, date = await calendar.process_selection(callback_query, callback_data)
 
     if selected:
-        await state.set_state(st.CreateRemindersFSM.text)
+        await state.set_state(st.CreateRemindersFSM.total_date)
         await state.update_data(
-            total_date=date, id=callback_query.from_user.id, created_at=datetime.now()
+            date=dt.date(date.year, date.month, date.day),
+            id=callback_query.from_user.id,
+            created_at=datetime.now(),
         )
-        await callback_query.message.answer(f'Выбрана дата {date.strftime("%d/%m/%Y")}')
-        await callback_query.message.answer("Введите текст: ")
+        await callback_query.answer(f'Выбрана дата {date.strftime("%d.%m.%Y")}')
+        await callback_query.message.answer("Введите время в формате 'час, минута': ")
+
+
+@user.message(st.CreateRemindersFSM.total_date)
+async def add_total_date_reminder(message: Message, state: FSMContext):
+    hour, minute = int(message.text.split(",")[0]), int(message.text.split(",")[1])
+    data = await state.get_data()
+    date = data.get("date")
+    try:
+
+        reminder_time = dt.time(hour, minute)
+        total_date = dt.datetime.combine(date, reminder_time)
+        await state.update_data(total_date=total_date)
+        await message.answer("Введите текст напоминания")
+        await state.set_state(st.CreateRemindersFSM.text)
+    except ValueError:
+        await message.answer("Неверно указано время напоминания")
+        return
 
 
 @user.message(st.CreateRemindersFSM.text)
@@ -327,5 +385,65 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
     await state.update_data(text=message.text)
     data = await state.get_data()
     await create_reminder(data)
-    await message.answer("Напоминание добавлено успешно!")
+    await message.answer(f"Напоминание о событии {data.get('text')} добавлено успешно!")
     await state.clear()
+
+
+# ------ ДОБАВЛЕНИЕ ИНТЕРСНЫХ ПОКУПОК -------------
+@user.message(F.text == "Добавить продукт в избранное")
+async def purchases_cmd(message: Message, state: FSMContext):
+    await message.answer(
+        "Добавление интересной покупки в ваш личный список, это поможет вам в будущем вспмнить, какой товар вы покупали"
+    )
+    await state.set_state(st.CreatePurchasesFSM.text)
+    await message.answer(
+        "Введите всё нужную информацию о товаре ( цена будет отдельно ):",
+        reply_markup=kb.skip_kb,
+    )
+
+
+@user.message(st.CreatePurchasesFSM.text)
+async def purchases_add_text(message: Message, state: FSMContext):
+    if message.text == "пропустить":
+        await message.answer("Вы пропустили этот шаг!", reply_markup=kb.main_kb)
+        await state.update_data(id=message.from_user.id, text=None)
+    else:
+        await state.update_data(id=message.from_user.id, text=message.text)
+    await state.set_state(st.CreatePurchasesFSM.price)
+    await message.answer("Введите стоимость этого товара:", reply_markup=kb.skip_kb)
+
+
+@user.message(st.CreatePurchasesFSM.price)
+async def purchases_add_price(message: Message, state: FSMContext):
+    if message.text == "пропустить":
+        await message.answer("Вы пропустили этот шаг!", reply_markup=kb.main_kb)
+        await state.update_data(price=None)
+    else:
+        try:
+            await state.update_data(price=int(message.text))
+        except ValueError:
+            await message.answer(
+                "Введен неверный формат цены. Повторите ввод( цена указывается в формате полного числа ): ",
+                reply_markup=kb.skip_kb,
+            )
+            return
+    await state.set_state(st.CreatePurchasesFSM.image)
+    await message.answer("Пришлите фото этого товара:", reply_markup=kb.skip_kb)
+
+
+@user.message(st.CreatePurchasesFSM.image)
+async def purchases_add_image(message: Message, state: FSMContext):
+    if message.text == "пропустить":
+        await message.answer("Вы пропустили этот шаг!", reply_markup=kb.main_kb)
+        await create_purchase(data=await state.get_data())
+    else:
+        file_name = (
+            f"media/purchases/{message.from_user.id}_{message.photo[-1].file_id}.jpg"
+        )
+        await message.bot.download(
+            file=message.photo[-1].file_id, destination=file_name
+        )
+        await state.update_data(image=file_name)
+        await create_purchase(data=await state.get_data())
+    await state.clear()
+    await message.answer("Покупка добавлена", reply_markup=kb.main_kb)

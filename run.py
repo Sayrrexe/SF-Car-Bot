@@ -19,13 +19,17 @@ bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 
 async def startup(dispatcher: Dispatcher):
-    await Tortoise.init(db_url=f"postgres://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
-                        modules={"models": ["app.database.models"]})
+    await Tortoise.init(
+        db_url=f"postgres://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
+        modules={"models": ["app.database.models"]},
+    )
     await Tortoise.generate_schemas()
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(check_reminders, "interval", hours=24)
-    scheduler.add_job(send_seasonal_notifications, "cron", month="10", day="15", hour=9)
+    scheduler.add_job(
+        send_seasonal_notifications, "cron", month="10", day="15", hour=19
+    )
     scheduler.add_job(send_seasonal_notifications, "cron", month="4", day="15", hour=9)
     scheduler.start()
 

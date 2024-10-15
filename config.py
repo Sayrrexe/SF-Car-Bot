@@ -43,7 +43,7 @@ TORTOISE_ORM = {
                 "user": DB_USER,
                 "password": DB_PASS,
                 "database": DB_NAME,
-            }
+            },
         }
     },
     "apps": {
@@ -51,7 +51,7 @@ TORTOISE_ORM = {
             "models": ["app.database.models", "aerich.models"],
             "default_connection": "default",
         }
-    }
+    },
 }
 
 # t.me/sf_car_bot

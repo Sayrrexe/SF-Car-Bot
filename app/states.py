@@ -1,7 +1,5 @@
 from aiogram.fsm.state import State, StatesGroup
 
-# Для состояний
-
 
 class CreateAutoFSM(StatesGroup):
     user = State()
@@ -24,7 +22,6 @@ class ProfileUserFSM(StatesGroup):
 
 class CreateNotesFSM(StatesGroup):
     user = State()
-    created_date = State()
     price = State()
     title = State()
 
@@ -33,11 +30,12 @@ class CreateRemindersFSM(StatesGroup):
     user = State()
     created_at = State()
     total_date = State()
+    # total_date_time = State()
     text = State()
 
 
 class CreatePurchasesFSM(StatesGroup):
-    user = State()
-    image = State()
+    id = State()
     text = State()
     price = State()
+    image = State()
