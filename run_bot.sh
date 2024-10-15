@@ -4,6 +4,7 @@
 MEDIA_DIR="media/cars"
 IMAGE_NAME="sf-car-bot:latest"  # Replace with your actual image name
 DOCKERFILE_PATH="Dockerfile"  # Adjust if your Dockerfile is in a different location
+STACK_NAME="bot_stack"
 
 # Step 1: Create media directory if it doesn't exist
 if [ ! -d "$MEDIA_DIR" ]; then
@@ -27,7 +28,7 @@ fi
 # Step 3: Deploy to Docker Swarm
 echo "Deploying to Docker Swarm..."
 docker swarm init
-docker stack deploy -c docker-compose.yml car_bot_stack
+docker stack deploy -c docker-compose.yml $STACK_NAME
 
 if [ $? -eq 0 ]; then
     echo "Deployment to Docker Swarm completed successfully."
