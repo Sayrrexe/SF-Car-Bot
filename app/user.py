@@ -50,6 +50,7 @@ async def cmd_start(message: Message):
 @user.callback_query(F.data == "return_callback")
 async def return_callback(callback: CallbackQuery, state: FSMContext):
     await state.clear()
+    await callback.message.delete()
     await callback.message.answer('Вы в главном меню', reply_markup=kb.main_kb)
     
 @user.callback_query(F.data == "ignore") # Для кнопок которые ничего не делают
@@ -402,7 +403,7 @@ async def delete_reminder_with_callback(callback: CallbackQuery):
 @user.message(F.text == "Избранное")
 async def purchases_cmd(message: Message, state: FSMContext):
     await message.answer(
-        'Добавление интересной покупки в ваш личный список, это поможет вам в будущем вспмнить, какой товар вы покупали', reply_markup=kb.favorites_kb)
+        'Добавление интересной покупки в ваш личный список, это поможет вам в будущем вспомнить, какой товар вы покупали', reply_markup=kb.favorites_kb)
     
     
 @user.message(F.text == "Добавить товар в избранное")
@@ -465,16 +466,16 @@ async def purchases_cmd(message: Message, state: FSMContext):
     
     # Сохраняем индекс текущей покупки в состояние
     await state.update_data(current_purchase=0)
-
+    await message.answer('Выводим...', reply_markup=kb.skip_menu_kb)
     # Выводим первую покупку
     await show_purchase(message, purchases[0], 0, len(purchases))
     
 async def show_purchase(message: Message, purchase, current_index, total_count): # универсальная функция для вывода
     text = (
     f"Покупка: {purchase.text}\n"
-    f"Цена: {purchase.price:.2f} ₽\n\n"
-)
+    f"Цена: {purchase.price:.2f} ₽\n\n")
     
+    await message.delete()
     if purchase.image:
         try:
             await message.answer_photo(photo=FSInputFile(purchase.image, filename="Car"), caption=text, reply_markup=await kb.get_pagination_keyboard(current_index, total_count))
@@ -491,7 +492,7 @@ async def pagination_handler(callback_query: CallbackQuery, state: FSMContext):
     data = callback_query.data.split("_")
     direction = data[0]
     current_index = int(data[1])
-    await callback_query.message.delete()
+    
     # Получаем покупки пользователя из базы данных
     user = callback_query.from_user
     purchases = await get_user_purchases(user.id)

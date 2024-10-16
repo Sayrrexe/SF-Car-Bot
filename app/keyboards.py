@@ -21,6 +21,12 @@ return_kb = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="Отмена", callback_data="return_callback")]
     ]
 )
+skip_menu_kb = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='Меню')]
+    ],
+                              resize_keyboard=True, 
+                              input_field_placeholder="Выберите пункт меню.",)
+
 
 main_kb = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="Создать заметку о расходах")],
@@ -92,14 +98,14 @@ async def get_pagination_keyboard(current_index, total_count):
     else:
         keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
 
-    # Организуем кнопки в ряд
+    keyboard.add(InlineKeyboardButton(text="В меню", callback_data="return_callback"))
     keyboard.adjust(3)
     return keyboard.as_markup()
 
 async def delete_user_notes_kb(tg_id):
+    keyboard = InlineKeyboardBuilder()
     notes = await get_user_notes(tg_id)
     notes_list = notes.split('\n')
-    keyboard = InlineKeyboardBuilder()  # Создаем объект клавиатуры
     
     for note in notes_list:
         text = note.split(' ')[2]
@@ -111,7 +117,7 @@ async def delete_user_notes_kb(tg_id):
 
 async def delete_user_reminders_kb(tg_id):
     reminders = await get_user_reminders(tg_id)
-    keyboard = InlineKeyboardBuilder()  # Создаем объект клавиатуры
+    keyboard = InlineKeyboardBuilder()  
     for reminder in reminders:
         text = f"{reminder.text} - {reminder.total_date}"
         keyboard.add(InlineKeyboardButton(text=text, callback_data=f'reminder_{reminder.text}&{reminder.total_date}'))
