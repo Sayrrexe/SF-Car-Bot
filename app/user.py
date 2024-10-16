@@ -23,7 +23,8 @@ from app.database.requests import (
     get_user_notes,
     create_purchase,
     get_user_purchases,
-    delete_note_by_title
+    delete_note_by_title,
+    delete_user_reminders_by_text,
 )
 
 import app.keyboards as kb
@@ -388,7 +389,15 @@ async def delete_reminder_cmd(message: Message):
 async def delete_reminder_with_callback(callback: CallbackQuery):
     await callback.message.delete()
     await callback.message.answer('Удаляем...')
-
+    data = callback.data.split("_")[1]
+    try:
+        await delete_user_reminders_by_text(user_id=callback.from_user.id,data=data)
+        await callback.message.delete()
+        await callback.message.answer('Напоминание "{data}" Успешно удалено')
+    except Exception as e:
+        await callback.message.delete()
+        await callback.message.answer(f'Произошла ошибка, посмотрите вашу ошибку в /bugs\nКод ошибки: {e}')
+    
 # ------ ДОБАВЛЕНИЕ ИНТЕРСНЫХ ПОКУПОК -------------
 @user.message(F.text == "Избранное")
 async def purchases_cmd(message: Message, state: FSMContext):

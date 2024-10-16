@@ -126,10 +126,8 @@ async def get_user_notes(tg_id):  # получить все заметки по�
 
 async def delete_note_by_title(tg_id: int, title):  # удалить авто по названию и пользователю
     user = await User.get(tg_id=tg_id)
-    print(user)
     if user:
         note = await Notes.get(user=user, title=title).first()
-        print(note)
         if note:
             await note.delete()
             return True
@@ -156,6 +154,16 @@ async def get_user_reminders(tg_id):
     reminders = await Reminders.filter(user = user).all()  
     return reminders
 
+async def delete_user_reminders_by_text(user_id, data):
+    user = await User.get(tg_id=user_id)
+    args = data.split('&')
+    if user:
+        reminder = await Reminders.get(user=user, text = args[0],).first()
+        if reminder:
+            await reminder.delete()
+            return True
+    return False
+
 
 # ------- Покупки ---------
 async def create_purchase(data):  # создание покупки
@@ -174,7 +182,12 @@ async def create_purchase(data):  # создание покупки
         logger.error(f"Error creating car: {e}")
         return
     
-async def get_user_purchases(user_id): # Запрашиваем все покупки пользователя
+async def get_user_purchases(user_id):# Запрашиваем все покупки пользователя
     user = await User.get(tg_id=user_id)
+    if not user:
+        return []
     purchases = await Purchases.filter(user = user).all()  
     return purchases
+
+
+    

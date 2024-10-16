@@ -106,18 +106,15 @@ async def delete_user_notes_kb(tg_id):
         
         keyboard.add(InlineKeyboardButton(text=note, callback_data=f'note_{text}'))
     
-    keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return"))
+    keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return_callback"))
     return keyboard.adjust(1).as_markup()
 
 async def delete_user_reminders_kb(tg_id):
-    print(tg_id)
     reminders = await get_user_reminders(tg_id)
-    print(reminders)
     keyboard = InlineKeyboardBuilder()  # Создаем объект клавиатуры
     for reminder in reminders:
         text = f"{reminder.text} - {reminder.total_date}"
-        print(text)
         keyboard.add(InlineKeyboardButton(text=text, callback_data=f'reminder_{reminder.text}&{reminder.total_date}'))
     
-    keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return"))
+    keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return_callback"))
     return keyboard.adjust(1).as_markup()
