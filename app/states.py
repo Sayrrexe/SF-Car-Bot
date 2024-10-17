@@ -10,14 +10,9 @@ class CreateAutoFSM(StatesGroup):
     mileage = State()
     image = State()
 
-
 class CarDeleteFSM(StatesGroup):
     car = State()
     user = State()
-
-
-class ProfileUserFSM(StatesGroup):
-    car = State()
 
 
 class CreateNotesFSM(StatesGroup):
@@ -25,14 +20,12 @@ class CreateNotesFSM(StatesGroup):
     price = State()
     title = State()
 
-
 class CreateRemindersFSM(StatesGroup):
     user = State()
     created_at = State()
     total_date = State()
     # total_date_time = State()
     text = State()
-
 
 class CreatePurchasesFSM(StatesGroup):
     id = State()

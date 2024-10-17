@@ -49,9 +49,8 @@ async def get_all_user_cars(tg_id: int):  # получить все авто н�
     return cars
 
 
-async def get_car_by_model(
-    tg_id: int, message
-):  # получить авто пользователя по названию
+
+async def get_car_by_model(tg_id: int, message):  # получить авто пользователя по названию
     message = str(message).split(" ")
     if len(message) < 2:
         return False
@@ -66,9 +65,8 @@ async def get_car_by_model(
     return False
 
 
-async def delete_car_by_model(
-    tg_id: int, message
-):  # удалить авто по названию и пользователю
+
+async def delete_car_by_model(tg_id: int, message):  # удалить авто по названию и пользователю
     message = message.split(" ")
     if len(message) < 2:
         return False
@@ -96,9 +94,7 @@ async def create_notes(data):  # создание заметки
         return
 
 
-async def get_all_user_nots_per_year(
-    tg_id: int,
-):  # получить заметки о тратах пользователя за год
+async def get_all_user_nots_per_year(tg_id: int):  # получить заметки о тратах пользователя за год
     # Получаем текущую дату и дату год назад
     one_year_ago = datetime.now() - timedelta(days=365)
 
@@ -118,6 +114,7 @@ async def get_user_notes(tg_id):  # получить все заметки по�
         return "Пользователь не найден\nПропишите /start что бы исправить это."
 
     # Получаем все заметки пользователя, сортируя от самой новой к самой старой
+
     recent_notes = await Notes.filter(user=user).order_by("-created_date").all()
 
     if not recent_notes:
@@ -129,6 +126,15 @@ async def get_user_notes(tg_id):  # получить все заметки по�
         for note in recent_notes
     ]
     return "\n".join(notes_list)
+
+async def delete_note_by_title(tg_id: int, title):  # удалить авто по названию и пользователю
+    user = await User.get(tg_id=tg_id)
+    if user:
+        note = await Notes.get(user=user, title=title).first()
+        if note:
+            await note.delete()
+            return True
+    return False
 
 
 # ------- НАПОМИНАНИЯ ---------
@@ -145,6 +151,23 @@ async def create_reminder(data):  # создание напоминания
         return
     except Exception as e:
         return
+
+    
+async def get_user_reminders(tg_id):
+    user = await User.get(tg_id=tg_id)
+    reminders = await Reminders.filter(user = user).all()  
+    return reminders
+
+async def delete_user_reminders_by_text(user_id, data):
+    user = await User.get(tg_id=user_id)
+    args = data.split('&')
+    if user:
+        reminder = await Reminders.get(user=user, text = args[0],).first()
+        if reminder:
+            await reminder.delete()
+            return True
+    return False
+
 
 
 # ------- Покупки ---------
@@ -163,3 +186,22 @@ async def create_purchase(data):  # создание покупки
     except Exception as e:
         logger.error(f"Error creating car: {e}")
         return
+
+async def get_user_purchases(user_id):# Запрашиваем все покупки пользователя
+    user = await User.get(tg_id=user_id)
+    if not user:
+        return []
+    purchases = await Purchases.filter(user = user).all()  
+    return purchases
+
+async def delete_user_purchases(user_id, text):
+    user = await User.get(tg_id=user_id)
+    if user:
+        purchase = await Purchases.get(user=user,text=text).first()
+        if purchase:
+            await purchase.delete()
+            return True
+    return False
+
+
+    

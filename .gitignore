@@ -85,16 +85,7 @@ cmake-build-*/
 *.iws
 
 # IntelliJ
-out/
-
-# mpeltonen/sbt-idea plugin
-.idea_modules/
-
-# JIRA plugin
-atlassian-ide-plugin.xml
-
-# Cursive Clojure plugin
-.idea/replstate.xml
+out/git merge main
 
 # SonarLint plugin
 .idea/sonarlint/
@@ -391,5 +382,6 @@ $RECYCLE.BIN/
 localssl.*
 
 test.py
+TEST.py
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,pycharm,python,vim,visualstudiocode,git

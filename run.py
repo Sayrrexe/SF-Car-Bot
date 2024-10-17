@@ -13,8 +13,6 @@ from app.schedule import check_reminders, send_seasonal_notifications
 
 
 logger = logging.getLogger(__name__)
-
-
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 

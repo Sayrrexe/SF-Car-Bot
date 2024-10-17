@@ -6,7 +6,7 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
-from app.database.requests import get_all_user_cars
+from app.database.requests import get_all_user_cars, get_user_notes, get_user_reminders
 
 
 # клавиатуры для сообщений
@@ -21,40 +21,50 @@ return_kb = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="Отмена", callback_data="return_callback")]
     ]
 )
-
-main_kb = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="Создать заметку о расходах")],
-        [KeyboardButton(text="Добавить продукт в избранное")],
-        [KeyboardButton(text="Создать Напоминание")],
-        [KeyboardButton(text="Профиль")],
+skip_menu_kb = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='Меню')]
     ],
-    resize_keyboard=True,
-    input_field_placeholder="Выберите пункт меню.",
-)
+                              resize_keyboard=True, 
+                              input_field_placeholder="Выберите пункт меню.",)
+
+
+main_kb = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="Избранное")],
+        [KeyboardButton(text="Создать заметку о расходах")],
+        [KeyboardButton(text="Создать Напоминание")],
+        [KeyboardButton(text="Автомобили")]
+    ],
+                              resize_keyboard=True, 
+                              input_field_placeholder="Выберите пункт меню.",)
+
+favorites_kb = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="Мои товары")],
+        [KeyboardButton(text="Добавить товар в избранное")],
+        [KeyboardButton(text='Меню')]
+    ],
+                                   resize_keyboard=True, 
+                                   input_field_placeholder="Выберите пункт меню.",)
 
 
 async def profile_kb(tg_id):
     cars = await get_all_user_cars(tg_id)
-    keyboard = ReplyKeyboardBuilder()
+    keyboard = InlineKeyboardBuilder()
     for car in cars:
         brand = car["brand"]
         model = car["model"]
-        keyboard.add(KeyboardButton(text=f"{brand} {model}"))
-    keyboard.add(KeyboardButton(text="Список покупок"))
-    keyboard.add(KeyboardButton(text="Меню"))
-    return keyboard.adjust(1).as_markup(resize_keyboard=True)
+        keyboard.add(InlineKeyboardButton(text=f"{brand} {model}", callback_data=f'car_{brand}_{model}'))
+    keyboard.add(InlineKeyboardButton(text="Список покупок", callback_data='list_purchases'))
+    keyboard.add(InlineKeyboardButton(text="Меню", callback_data="return_callback"))
+    return keyboard.adjust(1).as_markup()
 
-
-settings_kb = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="Удалить Авто")],
-        [KeyboardButton(text="Добавить Авто")],
+settings_kb = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="Удалить Авто"),KeyboardButton(text="Добавить Авто")],
+        [KeyboardButton(text='Удалить заметку'),KeyboardButton(text='Удалить напоминание')],
+        [KeyboardButton(text='Меню')]
+        
     ],
-    resize_keyboard=True,
-    input_field_placeholder="Выберите пункт меню.",
-)
-
+                                  resize_keyboard=True,
+                                  input_field_placeholder="Выберите пункт меню.",)
 
 async def all_cars_kb(tg_id):
     cars = await get_all_user_cars(tg_id)
@@ -67,8 +77,62 @@ async def all_cars_kb(tg_id):
     return keyboard.adjust(1).as_markup(resize_keyboard=True)
 
 
-skip_kb = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text="пропустить")], [KeyboardButton(text="Меню")]],
-    resize_keyboard=True,
-    input_field_placeholder="Напишите или выберите 'пропустить'",
-)
+skip_kb = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="пропустить")],
+        [KeyboardButton(text="Меню")]
+],      resize_keyboard=True,
+        input_field_placeholder="Напишите или выберите 'пропустить'",)
+
+# Функция для создания клавиатуры пагинации 
+async def get_pagination_keyboard(current_index, total_count, text):
+    keyboard = InlineKeyboardBuilder()
+
+    # Кнопка "Назад"
+    if current_index > 0:
+        keyboard.add(InlineKeyboardButton(text="◀️ Назад", callback_data=f"prev_{current_index}"))
+    else:
+        keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
+
+    # Текущая страница в формате "X/Y"
+    keyboard.add(InlineKeyboardButton(text=f"{current_index + 1}/{total_count}", callback_data="page_info"))
+
+    # Кнопка "Вперед"
+    if current_index < total_count - 1:
+        keyboard.add(InlineKeyboardButton(text="Вперед ▶️", callback_data=f"next_{current_index}"))
+    else:
+        keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
+
+    keyboard.add(InlineKeyboardButton(text="В меню", callback_data="return_callback"))
+    keyboard.add(InlineKeyboardButton(text='Удалить', callback_data=f'delete_{text}_{current_index}'))
+    keyboard.adjust(3)
+    return keyboard.as_markup()
+
+async def delete_user_notes_kb(tg_id):
+    keyboard = InlineKeyboardBuilder()
+    notes = await get_user_notes(tg_id)
+    notes_list = notes.split('\n')
+    
+    for note in notes_list:
+        text = note.split(' ')[2]
+        
+        keyboard.add(InlineKeyboardButton(text=note, callback_data=f'note_{text}'))
+    
+    keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return_callback"))
+    return keyboard.adjust(1).as_markup()
+
+async def delete_user_reminders_kb(tg_id):
+    reminders = await get_user_reminders(tg_id)
+    keyboard = InlineKeyboardBuilder()  
+    for reminder in reminders:
+        text = f"{reminder.text} - {reminder.total_date}"
+        keyboard.add(InlineKeyboardButton(text=text, callback_data=f'reminder_{reminder.text}&{reminder.total_date}'))
+    
+    keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return_callback"))
+    return keyboard.adjust(1).as_markup()
+
+async def confirmation_delete_kb(text, current_index):
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Удалить!',callback_data=f'del_{text}'))  
+    keyboard.add(InlineKeyboardButton(text="Назад.", callback_data=f"next_{current_index}"))
+    return keyboard.adjust(1).as_markup()
+

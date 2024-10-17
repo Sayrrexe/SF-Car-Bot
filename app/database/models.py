@@ -8,7 +8,7 @@ from config import TYPE_CHOICES
 
 class User(Model):
     id = fields.IntField(primary_key=True)
-    username = fields.CharField(max_length=15)
+    username = fields.CharField(max_length=64)
     tg_id = fields.BigIntField()
     created_at = fields.DatetimeField(auto_now_add=True)
 

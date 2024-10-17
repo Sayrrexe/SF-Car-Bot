@@ -1,3 +1,4 @@
+
 from datetime import datetime, timedelta
 
 from app.database.models import Reminders, User
@@ -21,4 +22,4 @@ async def send_seasonal_notifications():
 
     users = await User.all()
     for user in users:
-        await bot.send_message(user.tg_id, "Время поменять омывайку и шины")
+        await bot.send_message(user.tg_id, "Время заменить Омывающую жидкость и переобуть резину")

@@ -54,6 +54,7 @@ class NewCalendar(SimpleCalendar):
             await query.answer(
                 f'Дата должна быть раньше {self.max_date.strftime("%d.%m.%Y")}',
                 show_alert=self.show_alerts,
+
             )
             return False, None
         await query.message.delete_reply_markup()  # removing inline keyboard
