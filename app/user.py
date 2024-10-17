@@ -212,30 +212,27 @@ async def cmd_bug(message: Message):
 
 
 # ----- ПРОФИЛЬ -----------
-@user.message(F.text == "Профиль")
-async def profile_cmd(message: Message, state: FSMContext):
+@user.message(F.text == "Автомобили") # Отлов сообщения
+async def profile_text_cmd(message: Message):
+    await profile_cmd_def(message=message)
+@user.message(Command('profile')) # отлов команды
+async def profile_cmd(message: Message):
+    await profile_cmd_def(message=message)
+    
+
+async def profile_cmd_def(message): # общвя функция для отловов
     cars = await get_all_user_cars(message.from_user.id)
     expenses = await get_all_user_nots_per_year(message.from_user.id)
-
     cars_text = "Автомобили:\n"
+    
     if cars:
         for car in cars:
             brand = car["brand"]
             model = car["model"]
             year = car["year"]
-            image = car.get("image", None)
 
             car_info = f"- {brand} {model} | год выпуска: {year}\n"
             cars_text += car_info
-
-            if image:
-                try:
-                    logger.info(f"{image}")
-                    await message.answer_photo(
-                        photo=FSInputFile(image, filename="Car"), caption=cars_text
-                    )
-                except FileNotFoundError:
-                    await message.answer(f"Картинка не найдена для {brand} {model}")
     else:
         cars_text = "У пользователя нет автомобилей.\n"
 
@@ -243,24 +240,16 @@ async def profile_cmd(message: Message, state: FSMContext):
         f"Профиль пользователя: {message.from_user.username}\n\n{cars_text}\nТраты на автомобиль за год: {expenses}",
         reply_markup=await kb.profile_kb(message.from_user.id),
     )
-    await state.set_state(st.ProfileUserFSM.car)
+    
 
-
-@user.message(st.ProfileUserFSM.car)
-async def settings_car_fsm(message: Message, state: FSMContext):
-    text = message.text
-    if text == "Отмена":
-        await state.clear()
-        await message.answer("Выберите пункт меню", reply_markup=kb.main_kb)
-        return
-    if text == 'Список покупок':
-        message_note = await get_user_notes(tg_id=message.from_user.id)
-        await message.answer(f'Список ваших покупок:\n{message_note}', reply_markup=kb.main_kb)
-        await state.clear()
-        return
-
-    cars = await get_car_by_model(message.from_user.id, text)
-
+@user.callback_query(F.data.startswith("car_"))
+async def settings_car_callback(callback: CallbackQuery):
+    data = callback.data.split("_")
+    text = f'{data[1]} {data[2]}'
+    print(text)
+    cars = await get_car_by_model(callback.from_user.id, text)
+    await callback.message.delete()
+    
     if cars:
         for car in cars:
             car_info = (
@@ -277,20 +266,24 @@ async def settings_car_fsm(message: Message, state: FSMContext):
             if image:
                 try:
                     logger.info(f"{image}")
-                    await message.answer_photo(
+                    await callback.message.answer_photo(
                         photo=FSInputFile(image, filename="Car"), caption=car_info, reply_markup=kb.main_kb
                     )
                 except FileNotFoundError:
-                    await message.answer(
+                    await callback.message.answer(
                         f"Изображение не найдено для {car['brand']} {car['model']}", reply_markup=kb.main_kb
                     )
             else:
-                await message.answer(car_info, reply_markup=kb.main_kb)
+                await callback.message.answer(car_info, reply_markup=kb.main_kb)
     else:
-        await message.answer("У пользователя нет такого авто.", reply_markup=kb.main_kb)
-    await state.clear()
-
-
+        await callback.message.answer("У пользователя нет такого авто.", reply_markup=kb.main_kb)
+    
+@user.callback_query(F.data == 'list_purchases')
+async def purchase_list_callback(callback: CallbackQuery):
+    message_note = await get_user_notes(tg_id=callback.from_user.id)
+    await callback.message.answer(f'Список ваших покупок:\n{message_note}', reply_markup=kb.main_kb)
+    
+    
 # ----- НАСТРОЙКИ -----------
 @user.message(Command('settings'))
 async def settings_cmd(message: Message):
