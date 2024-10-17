@@ -29,10 +29,10 @@ skip_menu_kb = ReplyKeyboardMarkup(keyboard=[
 
 
 main_kb = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text="Избранное")],
         [KeyboardButton(text="Создать заметку о расходах")],
+        [KeyboardButton(text="Избранное")],
         [KeyboardButton(text="Создать Напоминание")],
-        [KeyboardButton(text="Автомобили")]
+        [KeyboardButton(text="Профиль")]
     ],
                               resize_keyboard=True, 
                               input_field_placeholder="Выберите пункт меню.",)
@@ -45,17 +45,16 @@ favorites_kb = ReplyKeyboardMarkup(keyboard=[
                                    resize_keyboard=True, 
                                    input_field_placeholder="Выберите пункт меню.",)
 
-
 async def profile_kb(tg_id):
     cars = await get_all_user_cars(tg_id)
-    keyboard = InlineKeyboardBuilder()
+    keyboard = ReplyKeyboardBuilder()
     for car in cars:
         brand = car["brand"]
         model = car["model"]
-        keyboard.add(InlineKeyboardButton(text=f"{brand} {model}", callback_data=f'car_{brand}_{model}'))
-    keyboard.add(InlineKeyboardButton(text="Список покупок", callback_data='list_purchases'))
-    keyboard.add(InlineKeyboardButton(text="Меню", callback_data="return_callback"))
-    return keyboard.adjust(1).as_markup()
+        keyboard.add(KeyboardButton(text=f"{brand} {model}"))
+    keyboard.add(KeyboardButton(text="Список покупок"))
+    keyboard.add(KeyboardButton(text="Меню"))
+    return keyboard.adjust(1).as_markup(resize_keyboard=True)
 
 settings_kb = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="Удалить Авто"),KeyboardButton(text="Добавить Авто")],
