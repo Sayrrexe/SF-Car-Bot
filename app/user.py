@@ -205,6 +205,9 @@ async def help_cmd(message: Message):
     )
     await message.answer(help_text, parse_mode="Markdown")
 
+@user.message(Command('bug'))
+async def cmd_bug(message: Message):
+    await message.answer('Coming soon...')
 
 
 # ----- ПРОФИЛЬ -----------
