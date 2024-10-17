@@ -1,35 +1,38 @@
-# The car owner bot
+### Шаг 1 (Добавить)
 
+И перейдите в директорию с проектом 
 
-## Run bot using Docker Swarm
+```bash
+cd SF-Car-Bot
+```
 
+### Шаг 2 (был 3, добавить)
+```env
+TOKEN=ВАШ_ТОКЕН_ОТ_TELEGRAM
+DB_URL=sqlite://db.sqlite3
+DB_HOST=db
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=postgres
+DB_NAME=postgres
+```
 
-## Installing Docker
+### Шаг 3: Запуск бота с использованием Docker
+Мы предполагаем, что Вы используете дистрибутивы Linux Ubuntu или Red Hat, в других случаях, если у вас ещё нет Docker, скачайте и установите его:
 
+- [Инструкция по установке Docker](https://docs.docker.com/get-docker/) 
 
-We suggest that you are using Linux Ubuntu or Red Hat for deploying app in other case please refer to the official Docker installation documentation.
+Выполните следующие команды в терминале для запуска бота:
 
-### Starting app
+```bash
+chmod +x start.sh
+./start.sh
+```
 
-Open a terminal and navigate to the directory containing the project.
-Run the following commands to start bot:
+Убедитесь, что докер-сервисы запущены:
 
-Create file with env TOKEN and DB_URD:
-``bash``
-    touch .env
+```bash
+docker service ls
+```
 
-Edit right for running scripr:
-``bash``
-    chmod +x start.sh
-
-Run script:
-
-``bash``
-
-    ./start.sh	
-
-Verify that the containers is running:
-
-``bash``
-
-	docker service ls
+### Шаг 4 (был 5, добавить условие, что постгрес установлен и запущен либо же раскомментить конфиг с sqlite)
