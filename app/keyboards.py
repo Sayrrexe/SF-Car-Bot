@@ -40,6 +40,7 @@ main_kb = ReplyKeyboardMarkup(keyboard=[
 favorites_kb = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="Мои товары")],
         [KeyboardButton(text="Добавить товар в избранное")],
+        [KeyboardButton(text='Меню')]
     ],
                                    resize_keyboard=True, 
                                    input_field_placeholder="Выберите пункт меню.",)
@@ -57,7 +58,8 @@ async def profile_kb(tg_id):
 
 settings_kb = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="Удалить Авто"),KeyboardButton(text="Добавить Авто")],
-        [KeyboardButton(text='Удалить заметку'),KeyboardButton(text='Удалить напоминание')]
+        [KeyboardButton(text='Удалить заметку'),KeyboardButton(text='Удалить напоминание')],
+        [KeyboardButton(text='Меню')]
         
     ],
                                   resize_keyboard=True,
@@ -80,7 +82,7 @@ skip_kb = ReplyKeyboardMarkup(keyboard=[
         input_field_placeholder="Напишите или выберите 'пропустить'",)
 
 # Функция для создания клавиатуры пагинации 
-async def get_pagination_keyboard(current_index, total_count):
+async def get_pagination_keyboard(current_index, total_count, text):
     keyboard = InlineKeyboardBuilder()
 
     # Кнопка "Назад"
@@ -99,6 +101,7 @@ async def get_pagination_keyboard(current_index, total_count):
         keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
 
     keyboard.add(InlineKeyboardButton(text="В меню", callback_data="return_callback"))
+    keyboard.add(InlineKeyboardButton(text='Удалить', callback_data=f'delete_{text}_{current_index}'))
     keyboard.adjust(3)
     return keyboard.as_markup()
 
@@ -123,4 +126,10 @@ async def delete_user_reminders_kb(tg_id):
         keyboard.add(InlineKeyboardButton(text=text, callback_data=f'reminder_{reminder.text}&{reminder.total_date}'))
     
     keyboard.add(InlineKeyboardButton(text="Отмена", callback_data="return_callback"))
+    return keyboard.adjust(1).as_markup()
+
+async def confirmation_delete_kb(text, current_index):
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Удалить!',callback_data=f'del_{text}'))  
+    keyboard.add(InlineKeyboardButton(text="Назад.", callback_data=f"next_{current_index}"))
     return keyboard.adjust(1).as_markup()

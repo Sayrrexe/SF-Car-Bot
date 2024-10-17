@@ -189,5 +189,14 @@ async def get_user_purchases(user_id):# Запрашиваем все покуп
     purchases = await Purchases.filter(user = user).all()  
     return purchases
 
+async def delete_user_purchases(user_id, text):
+    user = await User.get(tg_id=user_id)
+    if user:
+        purchase = await Purchases.get(user=user,text=text).first()
+        if purchase:
+            await purchase.delete()
+            return True
+    return False
+
 
     
