@@ -94,8 +94,53 @@ python run.py
 
 ## 💡 Советы
 - Убедитесь, что вы правильно настроили файл `.env`.
-- Если по каким-то причинам вы не хотите использовать PostgreSql для своего бота вы можете поменять настройки .env на эти:
+- Если по каким-то причинам вы не хотите использовать PostgreSql:
+
+1.поменять настройки .env на эти:
 ```env
 TOKEN=ВАШ_ТОКЕ_БЕЗ_ПРОБЕЛОВ_И_СКОБОЧЕК
 DB_URL=sqlite://db.sqlite3
 ```
+2. Раскоментировать с 23 по 34 строчки и закоментировать с 37 по 56:
+```config.py
+# sqlite
+TORTOISE_ORM = {
+    "connections": {
+        "default": DB_URL,
+    },
+    "apps": {
+        "models": {
+            "models": ["app.database.models", "aerich.models"],
+            "default_connection": "default",
+        },
+    },
+}
+
+'''
+TORTOISE_ORM = {
+    "connections": {
+        "default": {
+            "engine": "tortoise.backends.asyncpg",
+            "credentials": {
+                "host": DB_HOST,
+                "port": DB_PORT,
+                "user": DB_USER,
+                "password": DB_PASS,
+                "database": DB_NAME,
+            },
+        }
+    },
+    "apps": {
+        "models": {
+            "models": ["app.database.models", "aerich.models"],
+            "default_connection": "default",
+        }
+    },
+}
+'''
+```
+измените 21 строчку run.py на:
+```run.py (21 строка)
+db_url=DB_URL,
+```
+Готово, теперь ваша БД использует sqlite
