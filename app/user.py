@@ -277,7 +277,7 @@ async def settings_car_fsm(message: Message, state: FSMContext):
                 try:
                     logger.info(f"{image}")
                     await message.answer_photo(
-                        photo=FSInputFile(image, filename="Car"), caption=car_info
+                        photo=FSInputFile(image, filename="Car"), caption=car_info, reply_markup=kb.main_kb
                     )
                 except FileNotFoundError:
                     await message.answer(
@@ -406,7 +406,8 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
     await state.update_data(text=message.text)
     data = await state.get_data()
     await create_reminder(data)
-    await message.answer(f'Напоминание о событии {data.get('text')} добавлено успешно!')
+    text = data.get('text')
+    await message.answer(f'Напоминание о событии {text} добавлено успешно!')
     await state.clear()
 
 @user.message(F.text == 'Удалить напоминание')
