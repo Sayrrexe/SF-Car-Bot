@@ -7,7 +7,7 @@
 ## Installing Docker
 
 
-We suggest that you are using Linux Ubuntu for deploying app in other case please refer to the official Docker installation documentation.
+We suggest that you are using Linux Ubuntu or Red Hat for deploying app in other case please refer to the official Docker installation documentation.
 
 ### Starting app
 

@@ -6,32 +6,43 @@ IMAGE_NAME="sf-car-bot:latest"  # Replace with your actual image name
 DOCKERFILE_PATH="Dockerfile"  # Adjust if your Dockerfile is in a different location
 STACK_NAME="bot_stack"
 
-# Step 0: Check if Docker is installed
+# Step 0: Check OS type
+OS_TYPE=$(cat /etc/*release | grep '^ID=' | cut -d'=' -f2 | tr -d '"')
+
+# Step 1: Install Docker based on OS type
 if ! command -v docker &> /dev/null; then
     echo "Docker is not installed. Installing Docker..."
 
-    # Update package database
-    sudo apt-get update
+    if [ "$OS_TYPE" == "ubuntu" ]; then
+        # For Ubuntu
+        sudo apt-get update
+        sudo apt-get install -y \
+            ca-certificates \
+            curl \
+            gnupg \
+            lsb-release \
+            apt-transport-https
 
-    # Install required packages
-    sudo apt-get install -y \
-        ca-certificates \
-        curl \
-        gnupg \
-        lsb-release \
-        apt-transport-https
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
-    # Add Docker’s official GPG key
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    elif [ "$OS_TYPE" == "centos" ] || [ "$OS_TYPE" == "rhel" ]; then
+        # For CentOS or Red Hat
+        sudo yum update -y
+        sudo yum install -y \
+            yum-utils \
+            device-mapper-persistent-data \
+            lvm2
 
-    # Set up the stable repository
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        sudo yum install -y docker-ce docker-ce-cli containerd.io
 
-    # Update package database again
-    sudo apt-get update
-
-    # Install Docker
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+    else
+        echo "Unsupported OS: $OS_TYPE"
+        exit 1
+    fi
 
     # Start Docker service and enable it to start at boot
     sudo systemctl start docker
@@ -40,13 +51,13 @@ if ! command -v docker &> /dev/null; then
     # Add current user to the Docker group to avoid using sudo
     sudo usermod -aG docker $USER
 
-    echo "Docker installed successfully. Please log out and log back in to use Docker without sudo."
+    echo "Docker installed successfully. The system will be restarting to use Docker without sudo."
     sudo reboot
 else
     echo "Docker is already installed."
 fi
 
-# Step 1: Create media directory if it doesn't exist
+# Step 2: Create media directory if it doesn't exist
 if [ ! -d "$MEDIA_DIR" ]; then
     mkdir -p "$MEDIA_DIR"
     echo "Directory $MEDIA_DIR created."
@@ -54,7 +65,7 @@ else
     echo "Directory $MEDIA_DIR already exists."
 fi
 
-# Step 2: Build the Docker image
+# Step 3: Build the Docker image
 echo "Building Docker image..."
 docker build -t $IMAGE_NAME -f $DOCKERFILE_PATH .
 
@@ -65,7 +76,7 @@ else
     exit 1
 fi
 
-# Step 3: Check if Docker Swarm is initialized
+# Step 4: Check if Docker Swarm is initialized
 if ! docker info | grep -q "Swarm: active"; then
     echo "Initializing Docker Swarm..."
     docker swarm init
@@ -73,7 +84,7 @@ else
     echo "Docker Swarm is already initialized."
 fi
 
-# Step 4: Deploy to Docker Swarm
+# Step 5: Deploy to Docker Swarm
 echo "Deploying to Docker Swarm..."
 docker stack deploy -c docker-compose.yml $STACK_NAME
 
