@@ -250,7 +250,6 @@ async def profile_cmd_def(message): # общвя функция для отло�
 async def settings_car_callback(callback: CallbackQuery):
     data = callback.data.split("_")
     text = f'{data[1]} {data[2]}'
-    print(text)
     cars = await get_car_by_model(callback.from_user.id, text)
     await callback.message.delete()
     
@@ -398,26 +397,31 @@ async def choose_total_date_reminder(
             created_at=datetime.now(),
         )
         await callback_query.answer(f'Выбрана дата {date.strftime("%d.%m.%Y")}')
-        await callback_query.message.answer("Введите время в формате 'час, минута': ")
+        await callback_query.message.delete()
+        await callback_query.message.answer("Введите время в формате 'час, минута': ", reply_markup= kb.return_kb)
 
 
 @user.message(st.CreateRemindersFSM.total_date)
 async def add_total_date_reminder(message: Message, state: FSMContext):
-    hour, minute = int(message.text.split(",")[0]), int(message.text.split(",")[1])
-    data = await state.get_data()
-    date = data.get("date")
+    try:
+        if len(message.text.split(",")) != 2:
+            raise ValueError
+        hour, minute = int(message.text.split(",")[0]), int(message.text.split(",")[1])
+        data = await state.get_data()
+        date = data.get("date")
+    except:
+        await message.answer("Введите время в формате 'час, минута': ", reply_markup= kb.return_kb)
+        return
     try:
 
         reminder_time = dt.time(hour, minute)
         total_date = dt.datetime.combine(date, reminder_time)
         await state.update_data(total_date=total_date)
-        await message.answer("Введите текст напоминания")
+        await message.answer("Введите текст напоминания", reply_markup= kb.return_kb)
         await state.set_state(st.CreateRemindersFSM.text)
     except ValueError:
-        await message.answer("Неверно указано время напоминания")
+        await message.answer("Неверно указано время напоминания", reply_markup= kb.return_kb)
         return
-        await callback_query.answer (f'Выбрана дата {date.strftime("%d.%m.%Y")}')
-        await callback_query.message.answer("Введите текст: ")
 
 
 @user.message(st.CreateRemindersFSM.text)
@@ -426,7 +430,7 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
     data = await state.get_data()
     await create_reminder(data)
     text = data.get('text')
-    await message.answer(f'Напоминание о событии {text} добавлено успешно!')
+    await message.answer(f'Напоминание о событии {text} добавлено успешно!', reply_markup= kb.main_kb)
     await state.clear()
 
 @user.message(F.text.lower() == 'удалить напоминание')
