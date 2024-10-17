@@ -12,8 +12,20 @@ LABEL org.opencontainers.image.version="1.0"
 LABEL org.opencontainers.image.maintainer="SF-hakaton <your.email@example.com>"
 LABEL org.opencontainers.image.source="https://github.com/Sayrrexe/SF-Car-Bot"
 
-RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && \
+# Install necessary packages, including netcat-openbsd
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev netcat-openbsd && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install locales and set up en_US.UTF-8
+RUN apt-get update && apt-get install -y locales && \
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen en_US.UTF-8 && \
+    update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 && \
+    dpkg-reconfigure --frontend=noninteractive locales
+
+# Set environment variables for locale
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 COPY requirements.txt .
 
@@ -21,7 +33,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
-RUN aerich init -t config.TORTOISE_ORM  
-RUN aerich init-db
+RUN chmod +x entrypoint.sh
 
-CMD ["python", "run.py"]
+# Set the entrypoint to your script
+ENTRYPOINT ["./entrypoint.sh"]

@@ -14,8 +14,7 @@ async def check_reminders():
     for reminder in reminders:
         await bot.send_message(reminder.user.tg_id, reminder.text)
 
-        reminder.total_date = now + (reminder.total_date - reminder.created_at)
-        await reminder.save()
+        await reminder.delete()
 
 
 async def send_seasonal_notifications():

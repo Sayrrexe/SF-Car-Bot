@@ -1,6 +1,7 @@
 import logging
 
 from datetime import datetime, timedelta
+import datetime as dt
 
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, FSInputFile
@@ -26,6 +27,7 @@ from app.database.requests import (
     delete_note_by_title,
     delete_user_reminders_by_text,
     delete_user_purchases,
+
 )
 
 import app.keyboards as kb
@@ -147,6 +149,7 @@ async def create_auto_mileage(message: Message, state: FSMContext):
         await message.answer('Введите пробег в формате числа без лишних символов!', reply_markup=kb.return_kb)
 
 
+
 @user.message(Command('skip'))
 async def skip_image(message: Message, state: FSMContext):
     await create_car(data=await state.get_data())
@@ -170,11 +173,13 @@ async def create_auto_image(message: Message, state: FSMContext):
 
 
 # ----- МЕНЮ -----------
-@user.message(Command('menu'))
+@user.message(Command("menu"))
 async def menu_cmd(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру',
-                         reply_markup=kb.main_kb)
+    await message.answer(
+        "Вы в главном меню!\nВыберите действие используя встроенную клавиатуру",
+        reply_markup=kb.main_kb,
+    )
 
 
 @user.message(F.text.lower() == 'меню')
@@ -240,7 +245,6 @@ async def profile_cmd_def(message): # общвя функция для отло�
         f"Профиль пользователя: {message.from_user.username}\n\n{cars_text}\nТраты на автомобиль за год: {expenses}",
         reply_markup=await kb.profile_kb(message.from_user.id),
     )
-    
 
 @user.callback_query(F.data.startswith("car_"))
 async def settings_car_callback(callback: CallbackQuery):
@@ -271,8 +275,7 @@ async def settings_car_callback(callback: CallbackQuery):
                     )
                 except FileNotFoundError:
                     await callback.message.answer(
-                        f"Изображение не найдено для {car['brand']} {car['model']}", reply_markup=kb.main_kb
-                    )
+                        f"Изображение не найдено для {car['brand']} {car['model']}", reply_markup=kb.main_kb)
             else:
                 await callback.message.answer(car_info, reply_markup=kb.main_kb)
     else:
@@ -319,6 +322,7 @@ async def notes_tittle_add(message: Message, state: FSMContext):
                          reply_markup=kb.return_kb)
 
 
+
 @user.message(st.CreateNotesFSM.title)
 async def notes_add_coast(message: Message, state: FSMContext):
     await state.update_data(id=message.from_user.id, title=message.text)
@@ -361,13 +365,13 @@ async def notes_delete_callback(callback_query: CallbackQuery,):
         await callback_query.message.answer('Удалить не получилось...\nПопробуйте сного, если не получится напишите /start', reply_markup=kb.settings_kb)
     
 
+
 # ------ НАПОМИНАНИЯ -------------
 @user.message(F.text.lower() == "создать напоминание")
 async def start_add_reminder(message: Message):
     await message.answer(
         "Выберите дату напоминания в пределах от 1 до 365 дней:",
         reply_markup=await NewCalendar().start_calendar(),
-
     )
 
 @user.callback_query(SimpleCalendarCallback.filter())
@@ -377,23 +381,44 @@ async def choose_total_date_reminder(
         state: FSMContext,
 ):
     await state.clear()
-
     calendar = NewCalendar()
     calendar.show_alerts = True
 
-    early_date = datetime.now() + timedelta(days=1)  # ранняя дата напоминания (завтра)
+    early_date = datetime.now()  # ранняя дата напоминания (завтра)
     late_date = datetime.now() + timedelta(days=365)  # поздняя дата (через год)
 
     calendar.set_dates_range(early_date, late_date)
     selected, date = await calendar.process_selection(callback_query, callback_data)
 
     if selected:
-        await state.set_state(st.CreateRemindersFSM.text)
+        await state.set_state(st.CreateRemindersFSM.total_date)
         await state.update_data(
-            total_date=date, id=callback_query.from_user.id, created_at=datetime.now()
+            date=dt.date(date.year, date.month, date.day),
+            id=callback_query.from_user.id,
+            created_at=datetime.now(),
         )
+        await callback_query.answer(f'Выбрана дата {date.strftime("%d.%m.%Y")}')
+        await callback_query.message.answer("Введите время в формате 'час, минута': ")
+
+
+@user.message(st.CreateRemindersFSM.total_date)
+async def add_total_date_reminder(message: Message, state: FSMContext):
+    hour, minute = int(message.text.split(",")[0]), int(message.text.split(",")[1])
+    data = await state.get_data()
+    date = data.get("date")
+    try:
+
+        reminder_time = dt.time(hour, minute)
+        total_date = dt.datetime.combine(date, reminder_time)
+        await state.update_data(total_date=total_date)
+        await message.answer("Введите текст напоминания")
+        await state.set_state(st.CreateRemindersFSM.text)
+    except ValueError:
+        await message.answer("Неверно указано время напоминания")
+        return
         await callback_query.answer (f'Выбрана дата {date.strftime("%d.%m.%Y")}')
         await callback_query.message.answer("Введите текст: ")
+
 
 @user.message(st.CreateRemindersFSM.text)
 async def add_text_and_final_reminder(message: Message, state: FSMContext):

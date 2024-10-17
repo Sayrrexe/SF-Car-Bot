@@ -76,6 +76,7 @@ async def all_cars_kb(tg_id):
     keyboard.add(KeyboardButton(text="Отмена"))
     return keyboard.adjust(1).as_markup(resize_keyboard=True)
 
+
 skip_kb = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="пропустить")],
         [KeyboardButton(text="Меню")]
@@ -134,3 +135,4 @@ async def confirmation_delete_kb(text, current_index):
     keyboard.add(InlineKeyboardButton(text='Удалить!',callback_data=f'del_{text}'))  
     keyboard.add(InlineKeyboardButton(text="Назад.", callback_data=f"next_{current_index}"))
     return keyboard.adjust(1).as_markup()
+
