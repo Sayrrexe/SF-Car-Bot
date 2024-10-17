@@ -20,13 +20,13 @@ Create file with env TOKEN and DB_URD:
 
 Edit right for running scripr:
 ``bash``
-    chmod +x run_bot.sh
+    chmod +x start.sh
 
 Run script:
 
 ``bash``
 
-    ./run_bot.sh	
+    ./start.sh	
 
 Verify that the containers is running:
 
