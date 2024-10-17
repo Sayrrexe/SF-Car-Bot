@@ -60,7 +60,7 @@ async def ignore_callback(callback_query: CallbackQuery):
 
 
 # ----- ДОБАВЛЕНИЕ АВТО В БАЗУ -----------
-@user.message(F.text == "Добавить Авто")
+@user.message(F.text.lower() == "добавить авто")
 async def message_car_add(message: Message, state: FSMContext):
     await message.answer(
         "Для добавления вашего авто пожалуйста введите марку вашего авто",
@@ -147,7 +147,7 @@ async def create_auto_mileage(message: Message, state: FSMContext):
         await message.answer('Введите пробег в формате числа без лишних символов!', reply_markup=kb.return_kb)
 
 
-@user.message(F.text == "/skip")
+@user.message(Command('skip'))
 async def skip_image(message: Message, state: FSMContext):
     await create_car(data=await state.get_data())
     await state.clear()
@@ -177,7 +177,7 @@ async def menu_cmd(message: Message, state: FSMContext):
                          reply_markup=kb.main_kb)
 
 
-@user.message(F.text == 'Меню')
+@user.message(F.text.lower() == 'меню')
 async def menu_text_cmd(message: Message, state: FSMContext):
     await state.clear()
     await message.answer('Вы в главном меню!\nВыберите действие используя встроенную клавиатуру',
@@ -212,7 +212,7 @@ async def cmd_bug(message: Message):
 
 
 # ----- ПРОФИЛЬ -----------
-@user.message(F.text == "Автомобили") # Отлов сообщения
+@user.message(F.text.lower() == "автомобили") # Отлов сообщения
 async def profile_text_cmd(message: Message):
     await profile_cmd_def(message=message)
 @user.message(Command('profile')) # отлов команды
@@ -290,7 +290,7 @@ async def settings_cmd(message: Message):
     await message.answer("Выберите действие", reply_markup=kb.settings_kb)
 
 
-@user.message(F.text == "Удалить Авто")
+@user.message(F.text.lower() == "удалить авто")
 async def delete_car_cmd(message: Message, state: FSMContext):
     await message.answer(
         "Выберите авто на встроенной клавиатуре\nВнимание восстановить авто после удаления НЕЛЬЗЯ!!!",
@@ -311,7 +311,7 @@ async def delete_car_fsm(message: Message, state: FSMContext):
 
 
 # ----- ДОБАВЛЕНИЕ ЗАМЕТКИ -----------
-@user.message(F.text == "Создать заметку о расходах")
+@user.message(F.text.lower() == "создать заметку о расходах")
 async def notes_tittle_add(message: Message, state: FSMContext):
     await state.clear()
     await state.set_state(st.CreateNotesFSM.title)
@@ -342,7 +342,7 @@ async def notes_add_final(message: Message, state: FSMContext):
     await state.clear()
     
     
-@user.message(F.text == 'Удалить заметку')
+@user.message(F.text.lower() == 'удалить заметку')
 async def cmd_del_note(message: Message):
     await message.answer('Выберите заметку для удаления', reply_markup= await 
                          kb.delete_user_notes_kb(message.from_user.id))
@@ -404,7 +404,7 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
     await message.answer(f'Напоминание о событии {text} добавлено успешно!')
     await state.clear()
 
-@user.message(F.text == 'Удалить напоминание')
+@user.message(F.text.lower() == 'удалить напоминание')
 async def delete_reminder_cmd(message: Message):
     await message.answer('Нажмите на кнопку для удаления', reply_markup=await kb.delete_user_reminders_kb(tg_id=message.from_user.id))
     
@@ -422,13 +422,13 @@ async def delete_reminder_with_callback(callback: CallbackQuery):
         await callback.message.answer(f'Произошла ошибка, попробуйте ещё раз или напишите /start\nКод ошибки: {e}')
     
 # ------ ДОБАВЛЕНИЕ ИНТЕРСНЫХ ПОКУПОК -------------
-@user.message(F.text == "Избранное")
+@user.message(F.text.lower() == "избранное")
 async def purchases_cmd(message: Message, state: FSMContext):
     await message.answer(
         'Добавление интересной покупки в ваш личный список, это поможет вам в будущем вспомнить, какой товар вы покупали', reply_markup=kb.favorites_kb)
     
     
-@user.message(F.text == "Добавить товар в избранное")
+@user.message(F.text.lower() == "добавить товар в избранное")
 async def purchases_cmd(message: Message, state: FSMContext):
     await state.set_state(st.CreatePurchasesFSM.text)
     await message.answer("Введите всё нужную информацию о товаре ( цена будет отдельно ):",
@@ -479,7 +479,7 @@ async def purchases_add_image(message: Message, state: FSMContext):
     await message.answer("Покупка добавлена", reply_markup=kb.main_kb)
 
 # ------ Вывод избранных покупок -------------
-@user.message(F.text == "Мои товары") # после команды обрабатывает пользователя и генерирует пагинацию
+@user.message(F.text.lower() == "мои товары") # после команды обрабатывает пользователя и генерирует пагинацию
 async def purchases_cmd(message: Message, state: FSMContext):
     purchases = await get_user_purchases(message.from_user.id)
     if not purchases:
@@ -549,4 +549,4 @@ async def delete_callback(callback: CallbackQuery):
     text = data[1]
     await callback.message.delete()
     await delete_user_purchases(user_id=callback.from_user.id, text=text)
-    await callback.message.answer('Удалёно.', reply_markup = kb.main_kb)
+    await callback.message.answer('Удалено.', reply_markup = kb.main_kb)
