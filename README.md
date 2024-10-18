@@ -1,35 +1,22 @@
-# The car owner bot
 
 
-## Run bot using Docker Swarm
-
-
-## Installing Docker
-
-
-We suggest that you are using Linux Ubuntu or Red Hat for deploying app in other case please refer to the official Docker installation documentation.
-
-### Starting app
-
-Open a terminal and navigate to the directory containing the project.
-Run the following commands to start bot:
-
-Create file with env TOKEN and DB_URD:
-``bash``
-    touch .env
-
-Edit right for running scripr:
-``bash``
-    chmod +x start.sh
-
-Run script:
-
-``bash``
-
-    ./start.sh	
-
-Verify that the containers is running:
-
-``bash``
-
-	docker service ls
+# TORTOISE_ORM = {
+#     "connections": {
+#         "default": {
+#             "engine": "tortoise.backends.asyncpg",
+#             "credentials": {
+#                 "host": DB_HOST,
+#                 "port": DB_PORT,
+#                 "user": DB_USER,
+#                 "password": DB_PASS,
+#                 "database": DB_NAME,
+#             },
+#         }
+#     },
+#     "apps": {
+#         "models": {
+#             "models": ["app.database.models", "aerich.models"],
+#             "default_connection": "default",
+#         }
+#     },
+# }
