@@ -4,6 +4,8 @@ from app.database.models import Service, Reminders, User
 
 
 async def check_service_reminders():
+    from run import bot
+
     now = datetime.now().date()
 
     services_due = await Service.filter(next_service_date__lte=now).prefetch_related(

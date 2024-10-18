@@ -1,8 +1,9 @@
+from datetime import datetime
+
 from aiogram_calendar import SimpleCalendar
 from aiogram_calendar.schemas import CalendarLabels
 from pydantic.types import conlist
 from pydantic.fields import Field
-from datetime import datetime
 
 
 class NewCalendarLabels(CalendarLabels):

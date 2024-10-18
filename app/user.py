@@ -7,10 +7,9 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
+from aiogram_calendar import SimpleCalendarCallback
 
 from app.calendar import NewCalendar
-
-from aiogram_calendar import SimpleCalendarCallback, SimpleCalendar
 
 from app.database.requests import (
     create_user,
@@ -145,7 +144,7 @@ async def create_auto_mileage(message: Message, state: FSMContext):
             reply_markup=kb.return_kb,
         )
         await state.set_state(st.CreateAutoFSM.image)
-    except:
+    except Exception:
         await message.answer(
             "Введите пробег в формате числа без лишних символов!",
             reply_markup=kb.return_kb,
@@ -277,7 +276,7 @@ async def settings_car_callback(callback: CallbackQuery):
 
             if image:
                 try:
-                    logger.info(f"{image}")
+                    logger.info("%s", image)
                     await callback.message.answer_photo(
                         photo=FSInputFile(image, filename="Car"),
                         caption=car_info,
@@ -388,7 +387,7 @@ async def notes_delete_callback(
         await callback_query.message.answer(
             f"Удалили запись о трате на: {data}", reply_markup=kb.main_kb
         )
-    except:
+    except Exception:
         await callback_query.message.delete()
         await callback_query.message.answer(
             "Удалить не получилось...\nПопробуйте сного, если не получится напишите /start",
