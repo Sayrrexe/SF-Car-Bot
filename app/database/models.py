@@ -66,3 +66,9 @@ class Service(Model):
     )
     type = fields.CharField(max_length=2, choices=TYPE_CHOICES)
     date = fields.DatetimeField(auto_now=True)
+    next_service_date = fields.DateField(null=True)
+
+    async def save(self, *args, **kwargs):
+        if not self.next_service_date:
+            self.next_service_date = (self.date + timedelta(days=240)).date()
+        await super().save(*args, **kwargs)
