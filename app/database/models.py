@@ -8,12 +8,11 @@ from config import TYPE_CHOICES
 
 class User(Model):
     id = fields.IntField(primary_key=True)
-    username = fields.CharField(max_length=64)
     tg_id = fields.BigIntField()
     created_at = fields.DatetimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.username or self.tg_id
+        return str(self.tg_id)
 
 
 class Car(Model):
@@ -64,5 +63,5 @@ class Service(Model):
     car = fields.ForeignKeyField(
         "models.Car", related_name="services", on_delete=fields.CASCADE
     )
-    type = fields.CharField(max_length=2, choices=TYPE_CHOICES)
+    type = fields.CharField(max_length=64)
     date = fields.DatetimeField(auto_now=True)

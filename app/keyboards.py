@@ -118,7 +118,7 @@ async def get_pagination_keyboard(current_index, total_count, text, service_pagi
     keyboard.add(InlineKeyboardButton(text="В меню", callback_data="return_callback"))
 
     if service_pagination:
-        keyboard.add(InlineKeyboardButton(text='Принять этот сервиса', callback_data='apply_service'))
+        keyboard.add(InlineKeyboardButton(text='Зафиксировать виды работ', callback_data='apply_service'))
     else:
         keyboard.add(InlineKeyboardButton(text='Удалить', callback_data=f'delete_{text}_{current_index}'))
     keyboard.adjust(3)
@@ -153,3 +153,8 @@ async def confirmation_delete_kb(text, current_index):
     keyboard.add(InlineKeyboardButton(text="Назад.", callback_data=f"next_{current_index}"))
     return keyboard.adjust(1).as_markup()
 
+async def confirm_add_serv_kb(type): 
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Подтвердить!', callback_data=f'confirm_add_{type}'))
+    keyboard.add(InlineKeyboardButton(text='Отмена',callback_data='return_callback'))
+    return keyboard.adjust(1).as_markup()

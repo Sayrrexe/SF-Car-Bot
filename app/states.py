@@ -29,7 +29,6 @@ class CreateRemindersFSM(StatesGroup):
     user = State()
     created_at = State()
     total_date = State()
-    # total_date_time = State()
     text = State()
 
 class CreatePurchasesFSM(StatesGroup):

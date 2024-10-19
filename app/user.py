@@ -83,7 +83,7 @@ user = Router()
 # ----- ОБРАБОТКА /start -----------
 @user.message(CommandStart())
 async def cmd_start(message: Message):
-    await create_user(message.from_user.id, message.from_user.username)
+    await create_user(message.from_user.id)
     await message.answer(
         "Добро пожаловать в бот!\nУзнате список всех команд с помощью /help\nНажмите на кнопку что бы добавить характеристики вашего авто",
         reply_markup=kb.start_kb
@@ -318,10 +318,9 @@ async def settings_car_callback(callback: CallbackQuery, state: FSMContext):
                     await callback.message.answer(
                         f"Изображение не найдено для {car['brand']} {car['model']}", reply_markup=kb.main_kb)
             else:
-                await callback.message.answer(car_info, reply_markup=kb.main_kb)
-            await state.set_state(st.CreateServiceFSM.type)
-            await state.update_data(car_id=car["id"], id=callback.from_user.id)
-            await callback.message.answer('Запланировать сервисное обслуживание авто', reply_markup=kb.add_service_kb)
+                await state.set_state(st.CreateServiceFSM.type)
+                await callback.message.answer(car_info, reply_markup=kb.add_service_kb)
+            await state.update_data(car_id=f'{car['brand']} {car['model']}', id=callback.from_user.id)
     else:
         await callback.message.answer("У пользователя нет такого авто.", reply_markup=kb.main_kb)
 
@@ -329,7 +328,7 @@ async def settings_car_callback(callback: CallbackQuery, state: FSMContext):
 #--------- Работа с сервисами --------------
 async def show_services(message: Message, service, current_index, total_count):  # универсальная функция для вывода
     text = (
-        f"Сервис: {service}\n")
+        f"Тип: {service}\n")
 
     await message.delete()
     await message.answer(
@@ -369,69 +368,24 @@ async def pagination_handler(callback_query: CallbackQuery, state: FSMContext):
 
 @user.callback_query(F.data=='apply_service')
 async def apply_services(callback: CallbackQuery, state: FSMContext):
+    await callback.message.delete()
     data= await state.get_data()
-    await callback.answer(f'Выбран тип сервиса: {data.get('type')}')
-    await callback.message.answer(
-        "Выберите дату напоминания в пределах от 1 до 365 дней:",
-        reply_markup=await NewCalendar().start_calendar(),
-    )
-    await state.set_state(st.CreateServiceFSM.date)
+    type = data.get('type')
+    date = datetime.now()
+    date = str(date).split(' ')[0]
+    await callback.answer(f'Выбран тип сервиса: {type}')
+    await callback.message.answer(f"Вы подтверждаете добавление записи о {type}, на {date}?", reply_markup= await kb.confirm_add_serv_kb(type))
 
 
-@user.message(F.text.lower() == "создать напоминание")
-async def start_add_reminder(message: Message):
-    await message.answer(
-        "Выберите дату напоминания в пределах от 1 до 365 дней:",
-        reply_markup=await NewCalendar().start_calendar(),
-
-    )
-
-# @user.callback_query(ServiceCalendar.filter())
-# async def choose_total_date_reminder(
-#         callback_query: CallbackQuery,
-#         callback_data: SimpleCalendarCallback,
-#         state: FSMContext,
-#     ):
-#
-#
-#     calendar = NewCalendar()
-#     calendar.show_alerts = True
-#
-#     early_date = datetime.now() + timedelta(days=1)  # ранняя дата напоминания (завтра)
-#     late_date = datetime.now() + timedelta(days=365)  # поздняя дата (через год)
-#
-#     calendar.set_dates_range(early_date, late_date)
-#     selected, date = await calendar.process_selection(callback_query, callback_data)
-#
-#     if selected:
-#         await state.set_state(st.CreateRemindersFSM.total_date)
-#         await state.update_data(
-#             date=dt.date(date.year, date.month, date.day), id=callback_query.from_user.id, created_at=datetime.now()
-#         )
-#         await callback_query.answer (f'Выбрана дата {date.strftime("%d.%m.%Y")}')
-#     hour, minute = 15,00
-#     data = await state.get_data()
-#     date=data.get('date')
-#     try:
-#         reminder_time=dt.time(hour, minute)
-#         date = dt.datetime.combine(date, reminder_time)
-#         await state.update_data(date=date)
-#         await state.set_state(st.CreateServiceFSM.date)
-#
-#     except ValueError:
-#         await callback_query. message.answer('Неверно указано время напоминания')
-#         return
-#     await callback_query.message.answer('Введите текст напоминания')
-#
-
-@user.callback_query(st.CreateServiceFSM.date)
-async def create_service(callback: CallbackQuery, state: FSMContext):
-    data= await state.get_data()
-    # await state.update_data(date=date)
-    # await create_service(data)
-    await callback.answer(f'Тип сервиса {data.get('type')} запланирован на {data.get('date')}')
-
-#----------Конец по сервису0 --------------
+@user.callback_query(F.data.startswith('confirm_add_'))
+async def add_srvice_to_Db(callback: CallbackQuery, state: FSMContext):
+    data = callback.data.split('_')[2]
+    state_data = await state.get_data()
+    await create_service(state_data)
+    await callback.message.delete()
+    await callback.message.answer(f'Создали отметку о проведённом то: \nТип - {data}',reply_markup=kb.main_kb)
+    
+#----------Конец по сервису --------------
 
 
 @user.callback_query(F.data == 'list_purchases')
@@ -664,7 +618,6 @@ async def purchases_cmd(message: Message, state: FSMContext):
     await message.answer('Выводим...', reply_markup=kb.skip_menu_kb)
     # Выводим первую покупку
     await show_purchase(message, purchases[0], 0, len(purchases))
-    await message.answer('TEST_1')
     
     
 async def show_purchase(message: Message, purchase, current_index, total_count): # универсальная функция для вывода

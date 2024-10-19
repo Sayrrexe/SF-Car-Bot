@@ -5,12 +5,13 @@ from datetime import datetime, timedelta
 
 from app.database.models import User, Car, Notes, Reminders, Purchases, Service
 
+
 logger = logging.getLogger(__name__)
 
 
 # ----- ПОЛЬЗОВАТЕЛЬ -----------
 async def create_user(tg_id: int, username: str = None):  # создание пользователя
-    user = await User.get_or_create(tg_id=tg_id, username=username)
+    user = await User.get_or_create(tg_id=tg_id)
     return
 
 
@@ -204,15 +205,15 @@ async def delete_user_purchases(user_id, text):
 
 
 # ------- СЕРВИС ---------
-async def create_service(data):  # создание заметки
-    try:
-        service =await Service.create(
-                    car_id=data["car_id"],
-                    date=data["date"],
-                    type=data["type"],
-        )
-    except DoesNotExist:
-        return
-    except Exception as e:
-        return
-
+async def create_service(data):  # создание сервиса
+    brand, model = str(data['car_id']).split(' ')
+    user = await User.filter(tg_id = data['id']).first()
+    if user:
+        car = await Car.filter(user = user, brand = brand, model = model).first()
+        if car:
+            service = await Service.create(
+                car = car,
+                type = data['type']
+            )
+            return True
+    return False
