@@ -55,6 +55,7 @@ async def profile_kb(tg_id):
         model = car["model"]
         keyboard.add(InlineKeyboardButton(text=f"{brand} {model}", callback_data=f'car_{brand}_{model}'))
     keyboard.add(InlineKeyboardButton(text="Список покупок", callback_data='list_purchases'))
+    keyboard.add(InlineKeyboardButton(text='Все записи о ТО', callback_data = 'list_service'))
     keyboard.add(InlineKeyboardButton(text="Меню", callback_data="return_callback"))
     return keyboard.adjust(1).as_markup()
 

@@ -29,7 +29,7 @@ from app.database.requests import (
     delete_note_by_title,
     delete_user_reminders_by_text,
     delete_user_purchases,
-
+    get_all_user_serv,
 )
 
 import app.keyboards as kb
@@ -392,6 +392,12 @@ async def add_srvice_to_Db(callback: CallbackQuery, state: FSMContext):
 async def purchase_list_callback(callback: CallbackQuery):
     message_note = await get_user_notes(tg_id=callback.from_user.id)
     await callback.message.answer(f'Список ваших покупок:\n{message_note}', reply_markup=kb.main_kb)
+    
+@user.callback_query(F.data == 'list_service')
+async def service_list_callback(callback: CallbackQuery):
+    message_serv = await get_all_user_serv(tg_id=callback.from_user.id)
+    await callback.message.delete()
+    await callback.message.answer(message_serv, reply_markup=await kb.profile_kb(tg_id=callback.from_user.id))
     
     
 # ----- НАСТРОЙКИ -----------

@@ -217,3 +217,17 @@ async def create_service(data):  # создание сервиса
             )
             return True
     return False
+
+async def get_all_user_serv(tg_id):
+    text = ''
+    user = await User.filter(tg_id=tg_id).first()
+    if user:
+        cars = await Car.filter(user=user).all()
+        if cars:
+            for car in cars:    
+                services = await Service.filter(car=car).all()
+                text +=f'Авто {car.brand} {car.model}:\n'
+                for service in services:
+                    date = str(service.date).split(' ')[0]
+                    text += f'{date}: {service.type}\n'
+    return text
