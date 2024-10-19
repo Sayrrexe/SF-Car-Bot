@@ -13,12 +13,18 @@ DB_PASS = os.getenv("DB_PASS")
 DB_NAME = os.getenv("DB_NAME")
 
 
-TYPE_CHOICES = [
-    ("OL", "OIL"),  # масло
-    ("FL", "filter"),  # фильтр
-    ("SP", "Support"),  # тормозные колодки
-    ("FS", "Full Service"),  # полное ТО
-]
+# TYPE_CHOICES = [
+#     ("OL", "OIL"),  # масло
+#     ("FL", "filter"),  # фильтр
+#     ("SP", "Support"),  # тормозные колодки
+#     ("FS", "Full Service"),  # полное ТО
+# ]
+
+TYPE_CHOICES = [ 'Замена масла',
+                 'Замена колодок',
+                 'Замена фильтра',
+                 'Замена фар'
+                ]
 
 # # sqlite
 # TORTOISE_ORM = {
