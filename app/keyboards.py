@@ -8,6 +8,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 from app.database.requests import get_all_user_cars, get_user_notes, get_user_reminders
 
+from config import TYPE_CHOICES
 
 # клавиатуры для сообщений
 start_kb = InlineKeyboardMarkup(
@@ -77,6 +78,18 @@ async def all_cars_kb(tg_id):
     return keyboard.adjust(1).as_markup(resize_keyboard=True)
 
 
+add_service_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="Добавить сервис", callback_data="add_service")]
+    ]
+)
+
+async def services_kb():
+    keyboard = InlineKeyboardBuilder()
+    for service in TYPE_CHOICES:
+        keyboard.add(InlineKeyboardButton(text=f'{service}', callback_data='asda'))
+    return keyboard.adjust(1).as_markup()
+
 skip_kb = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="пропустить")],
         [KeyboardButton(text="Меню")]
@@ -84,7 +97,7 @@ skip_kb = ReplyKeyboardMarkup(keyboard=[
         input_field_placeholder="Напишите или выберите 'пропустить'",)
 
 # Функция для создания клавиатуры пагинации 
-async def get_pagination_keyboard(current_index, total_count, text):
+async def get_pagination_keyboard(current_index, total_count, text, service_pagination=False):
     keyboard = InlineKeyboardBuilder()
 
     # Кнопка "Назад"
@@ -103,7 +116,11 @@ async def get_pagination_keyboard(current_index, total_count, text):
         keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
 
     keyboard.add(InlineKeyboardButton(text="В меню", callback_data="return_callback"))
-    keyboard.add(InlineKeyboardButton(text='Удалить', callback_data=f'delete_{text}_{current_index}'))
+
+    if service_pagination:
+        keyboard.add(InlineKeyboardButton(text='Зафиксировать виды работ', callback_data='apply_service'))
+    else:
+        keyboard.add(InlineKeyboardButton(text='Удалить', callback_data=f'delete_{text}_{current_index}'))
     keyboard.adjust(3)
     return keyboard.as_markup()
 
@@ -136,3 +153,8 @@ async def confirmation_delete_kb(text, current_index):
     keyboard.add(InlineKeyboardButton(text="Назад.", callback_data=f"next_{current_index}"))
     return keyboard.adjust(1).as_markup()
 
+async def confirm_add_serv_kb(type): 
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Подтвердить!', callback_data=f'confirm_add_{type}'))
+    keyboard.add(InlineKeyboardButton(text='Отмена',callback_data='return_callback'))
+    return keyboard.adjust(1).as_markup()

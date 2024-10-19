@@ -3,7 +3,8 @@ import logging
 from tortoise.exceptions import DoesNotExist
 from datetime import datetime, timedelta
 
-from app.database.models import User, Car, Notes, Reminders, Purchases
+from app.database.models import User, Car, Notes, Reminders, Purchases, Service
+
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +59,11 @@ async def get_car_by_model(tg_id: int, message):  # получить авто п
 
     user = await User.get(tg_id=tg_id)
     car = await Car.filter(user=user, brand=brand, model=model).values(
-        "brand", "model", "year", "engine", "mileage", "image"
+        "brand", "model", "year", "engine", "mileage", "image","id"
     )
     if car:
         return car
     return False
-
 
 
 async def delete_car_by_model(tg_id: int, message):  # удалить авто по названию и пользователю
@@ -204,4 +204,16 @@ async def delete_user_purchases(user_id, text):
     return False
 
 
-    
+# ------- СЕРВИС ---------
+async def create_service(data):  # создание сервиса
+    brand, model = str(data['car_id']).split(' ')
+    user = await User.filter(tg_id = data['id']).first()
+    if user:
+        car = await Car.filter(user = user, brand = brand, model = model).first()
+        if car:
+            service = await Service.create(
+                car = car,
+                type = data['type']
+            )
+            return True
+    return False
