@@ -64,5 +64,6 @@ class Service(Model):
     car = fields.ForeignKeyField(
         "models.Car", related_name="services", on_delete=fields.CASCADE
     )
-    type = fields.CharField(max_length=2, choices=TYPE_CHOICES)
-    date = fields.DatetimeField(auto_now=True)
+    # type = fields.CharField(max_length=2, choices=TYPE_CHOICES)
+    type = fields.CharField(max_length=100,choices=TYPE_CHOICES)
+    date = fields.DateField()

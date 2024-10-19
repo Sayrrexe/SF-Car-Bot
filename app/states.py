@@ -11,7 +11,7 @@ class CreateAutoFSM(StatesGroup):
     image = State()
 
 class CreateServiceFSM(StatesGroup):
-    car_id=State()
+    # car_id=State()
     type=State()
     date=State()
 

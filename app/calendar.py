@@ -59,3 +59,6 @@ class NewCalendar(SimpleCalendar):
             return False, None
         await query.message.delete_reply_markup()  # removing inline keyboard
         return True, date
+
+class NewServiceCalendar(NewCalendar):
+    pass

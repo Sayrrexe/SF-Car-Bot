@@ -46,7 +46,7 @@ from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
-from app.calendar import NewCalendar
+from app.calendar import NewCalendar, NewServiceCalendar
 
 from aiogram_calendar import SimpleCalendarCallback, SimpleCalendar
 from aiogram_calendar import SimpleCalendarCallback as ServiceCalendar
@@ -320,7 +320,7 @@ async def settings_car_callback(callback: CallbackQuery, state: FSMContext):
             else:
                 await callback.message.answer(car_info, reply_markup=kb.main_kb)
             await state.set_state(st.CreateServiceFSM.type)
-            await state.update_data(car_id=car["id"], id=callback.from_user.id)
+            await state.update_data(car_id = int(car["id"]), id=callback.from_user.id)
             await callback.message.answer('Запланировать сервисное обслуживание авто', reply_markup=kb.add_service_kb)
     else:
         await callback.message.answer("У пользователя нет такого авто.", reply_markup=kb.main_kb)
@@ -339,6 +339,7 @@ async def show_services(message: Message, service, current_index, total_count): 
 
 @user.callback_query(F.data=="add_service")
 async def add_service(callback: CallbackQuery, state: FSMContext):
+
     await show_services(callback.message, TYPE_CHOICES[0],0,len(TYPE_CHOICES))
     service = TYPE_CHOICES[0]
     await state.update_data(type=service)
@@ -372,64 +373,38 @@ async def apply_services(callback: CallbackQuery, state: FSMContext):
     data= await state.get_data()
     await callback.answer(f'Выбран тип сервиса: {data.get('type')}')
     await callback.message.answer(
-        "Выберите дату напоминания в пределах от 1 до 365 дней:",
-        reply_markup=await NewCalendar().start_calendar(),
-    )
-    await state.set_state(st.CreateServiceFSM.date)
-
-
-@user.message(F.text.lower() == "создать напоминание")
-async def start_add_reminder(message: Message):
-    await message.answer(
-        "Выберите дату напоминания в пределах от 1 до 365 дней:",
-        reply_markup=await NewCalendar().start_calendar(),
-
+        "Выберите дату сервиса в пределах от 1 до 365 дней:",
+        reply_markup=await NewServiceCalendar().start_calendar(),
     )
 
-# @user.callback_query(ServiceCalendar.filter())
-# async def choose_total_date_reminder(
-#         callback_query: CallbackQuery,
-#         callback_data: SimpleCalendarCallback,
-#         state: FSMContext,
-#     ):
-#
-#
-#     calendar = NewCalendar()
-#     calendar.show_alerts = True
-#
-#     early_date = datetime.now() + timedelta(days=1)  # ранняя дата напоминания (завтра)
-#     late_date = datetime.now() + timedelta(days=365)  # поздняя дата (через год)
-#
-#     calendar.set_dates_range(early_date, late_date)
-#     selected, date = await calendar.process_selection(callback_query, callback_data)
-#
-#     if selected:
-#         await state.set_state(st.CreateRemindersFSM.total_date)
-#         await state.update_data(
-#             date=dt.date(date.year, date.month, date.day), id=callback_query.from_user.id, created_at=datetime.now()
-#         )
-#         await callback_query.answer (f'Выбрана дата {date.strftime("%d.%m.%Y")}')
-#     hour, minute = 15,00
-#     data = await state.get_data()
-#     date=data.get('date')
-#     try:
-#         reminder_time=dt.time(hour, minute)
-#         date = dt.datetime.combine(date, reminder_time)
-#         await state.update_data(date=date)
-#         await state.set_state(st.CreateServiceFSM.date)
-#
-#     except ValueError:
-#         await callback_query. message.answer('Неверно указано время напоминания')
-#         return
-#     await callback_query.message.answer('Введите текст напоминания')
-#
+@user.callback_query(ServiceCalendar.filter())
+async def choose_service_date(
+        callback_query: CallbackQuery,
+        callback_data: ServiceCalendar,
+        state: FSMContext,
+    ):
 
-@user.callback_query(st.CreateServiceFSM.date)
-async def create_service(callback: CallbackQuery, state: FSMContext):
-    data= await state.get_data()
-    # await state.update_data(date=date)
-    # await create_service(data)
-    await callback.answer(f'Тип сервиса {data.get('type')} запланирован на {data.get('date')}')
+
+    calendar = NewServiceCalendar()
+    calendar.show_alerts = True
+
+    early_date = datetime.now() + timedelta(days=1)  # ранняя дата напоминания (завтра)
+    late_date = datetime.now() + timedelta(days=365)  # поздняя дата (через год)
+
+    calendar.set_dates_range(early_date, late_date)
+    selected, date = await calendar.process_selection(callback_query, callback_data)
+
+    if selected:
+        service_date=dt.date(date.year, date.month, date.day)
+        await state.set_state(st.CreateServiceFSM.date)
+        await state.update_data(date=service_date)
+        await callback_query.answer (f'Дата сервиса {date.strftime("%d.%m.%Y")}')
+        data= await state.get_data()
+        await callback_query.answer(f'Тип сервиса {data.get('type')} запланирован на {data.get('date')}')
+        await create_service(data=data)
+        await callback_query.message.answer(f'Все успешно')
+        await callback_query.message.answer(f'{data}')
+        await state.clear()
 
 #----------Конец по сервису0 --------------
 
@@ -548,25 +523,15 @@ async def choose_total_date_reminder(
     selected, date = await calendar.process_selection(callback_query, callback_data)
 
     if selected:
+        total_date=dt.date(date.year, date.month, date.day)
         await state.set_state(st.CreateRemindersFSM.total_date)
-        await state.update_data(
-            date=dt.date(date.year, date.month, date.day), id=callback_query.from_user.id, created_at=datetime.now()
-        )
+        await state.update_data(id = callback_query.from_user.id,
+                                created_at = datetime.now(),
+                                total_date = total_date
+                                )
         await callback_query.answer (f'Выбрана дата {date.strftime("%d.%m.%Y")}')
-    hour, minute = 15,00
-    data = await state.get_data()
-    date=data.get('date')
-    try:
-        reminder_time=dt.time(hour, minute)
-        total_date = dt.datetime.combine(date, reminder_time)
-        await state.update_data(service_date=total_date)
-        await state.update_data(total_date=total_date)
         await state.set_state(st.CreateRemindersFSM.text)
-
-    except ValueError:
-        await callback_query. message.answer('Неверно указано время напоминания')
-        return
-    await callback_query.message.answer('Введите текст напоминания')
+        await callback_query.message.answer('Введите текст напоминания')
 
 
 @user.message(st.CreateRemindersFSM.text)
