@@ -66,4 +66,4 @@ class Service(Model):
     )
     # type = fields.CharField(max_length=2, choices=TYPE_CHOICES)
     type = fields.CharField(max_length=100,choices=TYPE_CHOICES)
-    date = fields.DateField()
+    date = fields.DateField(auto_now_add=True)

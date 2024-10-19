@@ -10,46 +10,8 @@ from aiogram.fsm.context import FSMContext
 
 from app.calendar import NewCalendar
 
-from aiogram_calendar import SimpleCalendarCallback, SimpleCalendar
-from aiogram_calendar import SimpleCalendarCallback as ServiceCalendar
+from aiogram_calendar import SimpleCalendarCallback
 
-from app.database.requests import (
-    create_user,
-    create_car,
-    create_service,
-    get_all_user_cars,
-    get_all_user_nots_per_year,
-    delete_car_by_model,
-    get_car_by_model,
-    create_notes,
-    create_reminder,
-    get_user_notes,
-    create_purchase,
-    get_user_purchases,
-    delete_note_by_title,
-    delete_user_reminders_by_text,
-    delete_user_purchases,
-
-)
-
-import app.keyboards as kb
-import app.states as st
-
-from config import TYPE_CHOICES
-import logging
-
-from datetime import datetime, timedelta
-import datetime as dt
-
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, FSInputFile
-from aiogram.filters import CommandStart, Command
-from aiogram.fsm.context import FSMContext
-
-from app.calendar import NewCalendar, NewServiceCalendar
-
-from aiogram_calendar import SimpleCalendarCallback, SimpleCalendar
-from aiogram_calendar import SimpleCalendarCallback as ServiceCalendar
 
 from app.database.requests import (
     create_user,
@@ -339,7 +301,6 @@ async def show_services(message: Message, service, current_index, total_count): 
 
 @user.callback_query(F.data=="add_service")
 async def add_service(callback: CallbackQuery, state: FSMContext):
-
     await show_services(callback.message, TYPE_CHOICES[0],0,len(TYPE_CHOICES))
     service = TYPE_CHOICES[0]
     await state.update_data(type=service)
@@ -370,44 +331,13 @@ async def pagination_handler(callback_query: CallbackQuery, state: FSMContext):
 
 @user.callback_query(F.data=='apply_service')
 async def apply_services(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(date=datetime.now())
     data= await state.get_data()
     await callback.answer(f'Выбран тип сервиса: {data.get('type')}')
-    await callback.message.answer(
-        "Выберите дату сервиса в пределах от 1 до 365 дней:",
-        reply_markup=await NewServiceCalendar().start_calendar(),
-    )
-
-@user.callback_query(ServiceCalendar.filter())
-async def choose_service_date(
-        callback_query: CallbackQuery,
-        callback_data: ServiceCalendar,
-        state: FSMContext,
-    ):
-
-
-    calendar = NewServiceCalendar()
-    calendar.show_alerts = True
-
-    early_date = datetime.now() + timedelta(days=1)  # ранняя дата напоминания (завтра)
-    late_date = datetime.now() + timedelta(days=365)  # поздняя дата (через год)
-
-    calendar.set_dates_range(early_date, late_date)
-    selected, date = await calendar.process_selection(callback_query, callback_data)
-
-    if selected:
-        service_date=dt.date(date.year, date.month, date.day)
-        await state.set_state(st.CreateServiceFSM.date)
-        await state.update_data(date=service_date)
-        await callback_query.answer (f'Дата сервиса {date.strftime("%d.%m.%Y")}')
-        data= await state.get_data()
-        await callback_query.answer(f'Тип сервиса {data.get('type')} запланирован на {data.get('date')}')
-        await create_service(data=data)
-        await callback_query.message.answer(f'Все успешно')
-        await callback_query.message.answer(f'{data}')
-        await state.clear()
-
-#----------Конец по сервису0 --------------
-
+    await create_service(data=data)
+    await callback.message.answer(f'Прохождение сервисного обслуживания: {data.get('type')} добавлено успешно')
+    await state.clear()
+#----------Конец по добавке сервиса --------------
 
 @user.callback_query(F.data == 'list_purchases')
 async def purchase_list_callback(callback: CallbackQuery):
