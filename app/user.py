@@ -333,7 +333,7 @@ async def show_services(message: Message, service, current_index, total_count): 
     await message.delete()
     await message.answer(
         text=text,
-        reply_markup=await kb.get_pagination_keyboard(current_index, total_count, len(TYPE_CHOICES), True)
+        reply_markup=await kb.get_pagination_keyboard_service(current_index, total_count)
     )
 
 @user.callback_query(F.data=="add_service")
