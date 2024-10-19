@@ -140,14 +140,14 @@ async def create_auto_model(message: Message, state: FSMContext):
     text = message.text
     try:
         text = int(text)
-        if text < 1885 or text > datetime.now().year:
+        if text < 1900 or text > datetime.now().year:
             raise ValueError
         await state.update_data(year=text)
         await message.answer("Введите объём двигателя", reply_markup=kb.return_kb)
         await state.set_state(st.CreateAutoFSM.engine)
     except:
         await message.answer(
-            "Год должен быть в формате числа, попробуйте ещё раз",
+            f"Год должен быть в формате числа, ввод ограничен от 1900г до {datetime.now().year}\nПопробуйте ещё раз",
             reply_markup=kb.return_kb,
         )
         return

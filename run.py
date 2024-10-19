@@ -26,7 +26,7 @@ async def startup(dispatcher: Dispatcher):
     scheduler = AsyncIOScheduler()
     scheduler.add_job(check_reminders, "interval", hours=24)
     scheduler.add_job(
-        send_seasonal_notifications, "cron", month="10", day="15", hour=19
+        send_seasonal_notifications, "cron", month="10", day="15", hour=9
     )
     scheduler.add_job(send_seasonal_notifications, "cron", month="4", day="15", hour=9)
     scheduler.start()
