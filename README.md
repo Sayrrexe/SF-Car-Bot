@@ -1,78 +1,145 @@
-# The car owner bot
+# 🚗 Telegram Car Bot
+
+Этот бот создан для управления автомобилями, ведения учёта расходов, напоминаний о сервисах и многого другого. Он легко запускается с помощью Docker и готов к использованию без специальных знаний.
+
+## 🔧 Функции бота
+
+- Добавление и управление автомобилями
+- Создание заметок о расходах
+- Напоминания о событиях
+- Учёт покупок и их управление
+- Удобное меню для взаимодействия
+- Учёт проведённых ТО, кастомные шаблоны ТО
+
+## 📋 Как запустить бота шаг за шагом
+
+### Шаг 1: Клонируйте репозиторий
+Сначала скачайте код на ваш компьютер. Для этого откройте терминал (или командную строку) и выполните команду:
+
+```bash
+git clone https://github.com/Sayrrexe/SF-Car-Bot.git
+cd SF-Car-Bot # переходим в каталог с ботом
+```
+
+### Шаг 2: Установите Docker
+Мы предполагаем, что Вы используете дистрибутивы Linux Ubuntu или Red Hat, в других случаях, если у вас ещё нет Docker, скачайте и установите его:
+
+- [Инструкция по установке Docker](https://docs.docker.com/get-docker/)
+
+### Шаг 3: Настройка переменных окружения
+
+Боту нужен токен Telegram и база данных для работы. Создайте файл `.env` в корне проекта с таким содержимым:
+
+```env
+TOKEN=ВАШ_ТОКЕН_ОТ_TELEGRAM
+DB_URL=sqlite://db.sqlite3
+DB_HOST=db
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=postgres
+DB_NAME=postgres
+```
+
+Как получить токен:
+1. Откройте Telegram и найдите [BotFather](https://t.me/BotFather).
+2. Введите `/newbot` и следуйте инструкциям.
+3. После создания бота вы получите токен.
+
+### Шаг 4: Запуск бота через Docker
+
+После установки Docker и создания файла `.env` можно запускать бота. Всё, что вам нужно сделать:
+
+1. Откройте терминал в папке с проектом.
+2. Выполните команду:
+
+```bash
+chmod +x start.sh
+```
+
+она создаст контейнер с ботом, теперь запустите его командой:
+
+```bash
+./start.sh
+```
+
+Готово! Вы великолепны, можете наслаждаться работой бота 🎉
+
+### Шаг 5: Запуск бота вручную (если не хотите использовать Docker)
+
+1. Убедитесь, что у вас установлен Python 3.10 или выше.
+версию Python можно проверить командой
+```bash
+python -v
+```
+2. Создайте файл .env и добавьте туда ваш ТОКЕН как это было показано выше
+3. Установите зависимости, выполнив команду:
+
+```bash
+pip install -r requirements.txt
+```
+
+4. Запустите бота:
+
+```bash
+python run.py
+```
+
+Теперь ваш бот готов к работе! 🎉
+
+## 🛠 Команды для взаимодействия с ботом
+
+- `/start` — начать взаимодействие с ботом
+- `/menu` — открыть главное меню
+- `/help` — список всех доступных команд
+
+## 💡 Советы
+- Убедитесь, что вы правильно настроили файл `.env`.
+- Если по каким-то причинам вы не хотите использовать PostgreSql:
+
+1.поменять настройки .env на эти:
+```env
+TOKEN=ВАШ_ТОКЕ_БЕЗ_ПРОБЕЛОВ_И_СКОБОЧЕК
+DB_URL=sqlite://db.sqlite3
+```
+2. Раскоментировать с 23 по 34 строчки и закоментировать с 37 по 56:
+```config.py
+# sqlite
+TORTOISE_ORM = {
+    "connections": {
+        "default": DB_URL,
+    },
+    "apps": {
+        "models": {
+            "models": ["app.database.models", "aerich.models"],
+            "default_connection": "default",
+        },
+    },
+}
 
 
-## Run bot using Docker
-
-	pip install -r requirements.txt
-
-## Installing Docker
-
-
-## Windows
-
-Download the Docker Desktop installer from Docker Hub.
-Run the installer and follow the installation instructions.
-Once installed, start Docker Desktop.
-------------------------------------------------------------------------------
-
-### macOS
-
-Download the Docker Desktop installer from Docker Hub.
-Open the .dmg file and drag Docker to your Applications folder.
-Start Docker from your Applications.
-------------------------------------------------------------------------------
-
-### Linux
-
-For Ubuntu or Debian-based distributions, you can use the following commands:
-
-``bash``
-
-	sudo apt-get update
-	sudo apt-get install -y \
-		apt-transport-https \
-		ca-certificates \
-		curl \
-		software-properties-common
-
-	curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
-	sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-	sudo apt-get update
-	sudo apt-get install -y docker-ce
----------------------------------------------------------------------------------
-For other Linux distributions, please refer to the official Docker installation documentation.
-
-Start docker and enable docker (unix system):
-``bash``
-    sudo systemctl start docker
-    sudo systemctl enable docker
-
-Manage Docker as a Non-Root User:
-``bash``
-    sudo usermod -aG docker ${USER}
-
-
-### Building the Docker Image
-
-Open a terminal and navigate to the directory containing the project.
-Run the following commands to start bot:
-
-Create file with env TOKEN and DB_URD:
-``bash``
-    touch .env
-
-Edit right for running scripr:
-``bash``
-    chmod +x run_bot.sh
-
-Run script:
-
-``bash``
-
-    ./run_bot.sh	
-
-Verify that the container is running:
-
-``bash``
-
-	docker service ls
+#TORTOISE_ORM = {
+#    "connections": {
+#        "default": {
+#            "engine": "tortoise.backends.asyncpg",
+#            "credentials": {
+#                "host": DB_HOST,
+#                "port": DB_PORT,
+#                "user": DB_USER,
+#                "password": DB_PASS,
+#                "database": DB_NAME,
+#            },
+#        }
+#    },
+#    "apps": {
+#        "models": {
+#            "models": ["app.database.models", "aerich.models"],
+#            "default_connection": "default",
+#        }
+#    },
+#}
+```
+измените 21 строчку run.py на:
+```run.py (21 строка)
+db_url=DB_URL,
+```
+Готово, теперь ваша БД использует sqlite

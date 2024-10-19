@@ -3,14 +3,15 @@ import logging
 from tortoise.exceptions import DoesNotExist
 from datetime import datetime, timedelta
 
-from app.database.models import User, Car, Notes, Reminders, Purchases
+from app.database.models import User, Car, Notes, Reminders, Purchases, Service
+
 
 logger = logging.getLogger(__name__)
 
 
 # ----- ПОЛЬЗОВАТЕЛЬ -----------
-async def create_user(tg_id: int, username: str = None):  # создание пользователя
-    user = await User.get_or_create(tg_id=tg_id, username=username)
+async def create_user(tg_id: int):  # создание пользователя
+    user = await User.get_or_create(tg_id=tg_id)
     return
 
 
@@ -49,6 +50,7 @@ async def get_all_user_cars(tg_id: int):  # получить все авто н�
     return cars
 
 
+
 async def get_car_by_model(tg_id: int, message):  # получить авто пользователя по названию
     message = str(message).split(" ")
     if len(message) < 2:
@@ -57,7 +59,7 @@ async def get_car_by_model(tg_id: int, message):  # получить авто п
 
     user = await User.get(tg_id=tg_id)
     car = await Car.filter(user=user, brand=brand, model=model).values(
-        "brand", "model", "year", "engine", "mileage", "image"
+        "brand", "model", "year", "engine", "mileage", "image","id"
     )
     if car:
         return car
@@ -112,7 +114,8 @@ async def get_user_notes(tg_id):  # получить все заметки по�
         return "Пользователь не найден\nПропишите /start что бы исправить это."
 
     # Получаем все заметки пользователя, сортируя от самой новой к самой старой
-    recent_notes = await Notes.filter(user=user).order_by('-created_date').all()
+
+    recent_notes = await Notes.filter(user=user).order_by("-created_date").all()
 
     if not recent_notes:
         return "У вас нет заметок."
@@ -123,6 +126,15 @@ async def get_user_notes(tg_id):  # получить все заметки по�
         for note in recent_notes
     ]
     return "\n".join(notes_list)
+
+async def delete_note_by_title(tg_id: int, title):  # удалить авто по названию и пользователю
+    user = await User.get(tg_id=tg_id)
+    if user:
+        note = await Notes.get(user=user, title=title).first()
+        if note:
+            await note.delete()
+            return True
+    return False
 
 
 # ------- НАПОМИНАНИЯ ---------
@@ -139,6 +151,23 @@ async def create_reminder(data):  # создание напоминания
         return
     except Exception as e:
         return
+
+    
+async def get_user_reminders(tg_id):
+    user = await User.get(tg_id=tg_id)
+    reminders = await Reminders.filter(user = user).all()  
+    return reminders
+
+async def delete_user_reminders_by_text(user_id, data):
+    user = await User.get(tg_id=user_id)
+    args = data.split('&')
+    if user:
+        reminder = await Reminders.get(user=user, text = args[0],).first()
+        if reminder:
+            await reminder.delete()
+            return True
+    return False
+
 
 
 # ------- Покупки ---------
@@ -157,3 +186,49 @@ async def create_purchase(data):  # создание покупки
     except Exception as e:
         logger.error(f"Error creating car: {e}")
         return
+
+
+async def get_user_purchases(user_id):# Запрашиваем все покупки пользователя
+    user = await User.get(tg_id=user_id)
+    if not user:
+        return []
+    purchases = await Purchases.filter(user = user).all()  
+    return purchases
+
+async def delete_user_purchases(user_id, text):
+    user = await User.get(tg_id=user_id)
+    if user:
+        purchase = await Purchases.get(user=user,text=text).first()
+        if purchase:
+            await purchase.delete()
+            return True
+    return False
+
+
+# ------- СЕРВИС ---------
+async def create_service(data):  # создание сервиса
+    brand, model = str(data['car_id']).split(' ')
+    user = await User.filter(tg_id = data['id']).first()
+    if user:
+        car = await Car.filter(user = user, brand = brand, model = model).first()
+        if car:
+            service = await Service.create(
+                car = car,
+                type = data['type']
+            )
+            return True
+    return False
+
+async def get_all_user_serv(tg_id):
+    text = ''
+    user = await User.filter(tg_id=tg_id).first()
+    if user:
+        cars = await Car.filter(user=user).all()
+        if cars:
+            for car in cars:    
+                services = await Service.filter(car=car).all()
+                text +=f'Авто {car.brand} {car.model}:\n'
+                for service in services:
+                    date = str(service.date).split(' ')[0]
+                    text += f'{date}: {service.type}\n'
+    return text
