@@ -97,7 +97,7 @@ skip_kb = ReplyKeyboardMarkup(keyboard=[
 ],      resize_keyboard=True,
         input_field_placeholder="Напишите или выберите 'пропустить'",)
 
-# Функция для создания клавиатуры пагинации 
+# Функция для создания клавиатуры пагинации для покупок
 async def get_pagination_keyboard(current_index, total_count, text):
     keyboard = InlineKeyboardBuilder()
 
