@@ -227,8 +227,12 @@ async def get_all_user_serv(tg_id):
         if cars:
             for car in cars:    
                 services = await Service.filter(car=car).all()
-                text +=f'Авто {car.brand} {car.model}:\n'
+                text += f'Авто {car.brand} {car.model}:\n'
                 for service in services:
-                    date = str(service.date).split(' ')[0]
-                    text += f'{date}: {service.type}\n'
+                    # Проверяем, что service.date не None
+                    if service.date is not None:
+                        date = str(service.date).split(' ')[0]
+                        text += f'{date}: {service.type}\n'
+                    else:
+                        text += f'Дата не указана для услуги: {service.type}\n'
     return text
