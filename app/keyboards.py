@@ -161,7 +161,7 @@ async def get_pagination_keyboard_service(current_index, total_count):
 
     # Кнопка "Назад"
     if current_index > 0:
-        keyboard.add(InlineKeyboardButton(text="◀️ Назад", callback_data=f"pc_{current_index}"))
+        keyboard.add(InlineKeyboardButton(text="◀️ Назад", callback_data=f"ps_{current_index}"))
     else:
         keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
 
@@ -170,7 +170,7 @@ async def get_pagination_keyboard_service(current_index, total_count):
 
     # Кнопка "Вперед"
     if current_index < total_count - 1:
-        keyboard.add(InlineKeyboardButton(text="Вперед ▶️", callback_data=f"nc_{current_index}"))
+        keyboard.add(InlineKeyboardButton(text="Вперед ▶️", callback_data=f"ns_{current_index}"))
     else:
         keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
 
