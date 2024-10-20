@@ -98,7 +98,7 @@ skip_kb = ReplyKeyboardMarkup(keyboard=[
         input_field_placeholder="Напишите или выберите 'пропустить'",)
 
 # Функция для создания клавиатуры пагинации 
-async def get_pagination_keyboard(current_index, total_count, text, service_pagination=False):
+async def get_pagination_keyboard(current_index, total_count, text):
     keyboard = InlineKeyboardBuilder()
 
     # Кнопка "Назад"
@@ -117,11 +117,7 @@ async def get_pagination_keyboard(current_index, total_count, text, service_pagi
         keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
 
     keyboard.add(InlineKeyboardButton(text="В меню", callback_data="return_callback"))
-
-    if service_pagination:
-        keyboard.add(InlineKeyboardButton(text='Зафиксировать виды работ', callback_data='apply_service'))
-    else:
-        keyboard.add(InlineKeyboardButton(text='Удалить', callback_data=f'delete_{text}_{current_index}'))
+    keyboard.add(InlineKeyboardButton(text='Удалить', callback_data=f'delete_{text}_{current_index}'))
     keyboard.adjust(3)
     return keyboard.as_markup()
 
@@ -159,3 +155,27 @@ async def confirm_add_serv_kb(type):
     keyboard.add(InlineKeyboardButton(text='Подтвердить!', callback_data=f'confirm_add_{type}'))
     keyboard.add(InlineKeyboardButton(text='Отмена',callback_data='return_callback'))
     return keyboard.adjust(1).as_markup()
+
+async def get_pagination_keyboard_service(current_index, total_count):
+    keyboard = InlineKeyboardBuilder()
+
+    # Кнопка "Назад"
+    if current_index > 0:
+        keyboard.add(InlineKeyboardButton(text="◀️ Назад", callback_data=f"pc_{current_index}"))
+    else:
+        keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
+
+    # Текущая страница в формате "X/Y"
+    keyboard.add(InlineKeyboardButton(text=f"{current_index + 1}/{total_count}", callback_data="page_info"))
+
+    # Кнопка "Вперед"
+    if current_index < total_count - 1:
+        keyboard.add(InlineKeyboardButton(text="Вперед ▶️", callback_data=f"nc_{current_index}"))
+    else:
+        keyboard.add(InlineKeyboardButton(text=" ", callback_data="ignore"))  # Пустая кнопка
+
+    keyboard.add(InlineKeyboardButton(text="В меню", callback_data="return_callback"))
+    keyboard.add(InlineKeyboardButton(text='Зафиксировать виды работ', callback_data='apply_service'))
+    
+    keyboard.adjust(3)
+    return keyboard.as_markup()

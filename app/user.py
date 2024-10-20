@@ -320,7 +320,9 @@ async def settings_car_callback(callback: CallbackQuery, state: FSMContext):
             else:
                 await state.set_state(st.CreateServiceFSM.type)
                 await callback.message.answer(car_info, reply_markup=kb.add_service_kb)
-            await state.update_data(car_id=f'{car['brand']} {car['model']}', id=callback.from_user.id)
+            brand = car['brand']
+            model = car['model']
+            await state.update_data(car_id=f'{brand} {model}', id=callback.from_user.id)
     else:
         await callback.message.answer("У пользователя нет такого авто.", reply_markup=kb.main_kb)
 
@@ -333,7 +335,7 @@ async def show_services(message: Message, service, current_index, total_count): 
     await message.delete()
     await message.answer(
         text=text,
-        reply_markup=await kb.get_pagination_keyboard(current_index, total_count, len(TYPE_CHOICES), True)
+        reply_markup=await kb.get_pagination_keyboard_service(current_index, total_count)
     )
 
 @user.callback_query(F.data=="add_service")
@@ -534,7 +536,7 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
     await state.update_data(text=message.text)
     data = await state.get_data()
     await create_reminder(data)
-    await message.answer(f'Напоминание о событии {data.get('text')} добавлено успешно!')
+    await message.answer(f'Напоминание о событии {data.get("text")} добавлено успешно!')
     await state.clear()
 
 @user.message(F.text.lower() == 'удалить напоминание')
