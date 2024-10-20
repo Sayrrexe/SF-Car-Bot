@@ -312,7 +312,7 @@ async def settings_car_callback(callback: CallbackQuery, state: FSMContext):
                 try:
                     logger.info(f"{image}")
                     await callback.message.answer_photo(
-                        photo=FSInputFile(image, filename="Car"), caption=car_info, reply_markup=kb.main_kb
+                        photo=FSInputFile(image, filename="Car"), caption=car_info, reply_markup=kb.add_service_kb
                     )
                 except FileNotFoundError:
                     await callback.message.answer(
@@ -320,7 +320,7 @@ async def settings_car_callback(callback: CallbackQuery, state: FSMContext):
             else:
                 await state.set_state(st.CreateServiceFSM.type)
                 await callback.message.answer(car_info, reply_markup=kb.add_service_kb)
-            await state.update_data(car_id=f'{car['brand']} {car['model']}', id=callback.from_user.id)
+            await state.update_data(car_id=f"{car['brand']} {car['model']}", id=callback.from_user.id)
     else:
         await callback.message.answer("У пользователя нет такого авто.", reply_markup=kb.main_kb)
 
@@ -343,7 +343,7 @@ async def add_service(callback: CallbackQuery, state: FSMContext):
     await state.update_data(type=service)
 
 
-@user.callback_query(F.data.startswith("prev_") | F.data.startswith("next_"))
+@user.callback_query(F.data.startswith("ps_") | F.data.startswith("ns_"))
 async def pagination_handler(callback_query: CallbackQuery, state: FSMContext):
     if st.CreateServiceFSM:
         data = callback_query.data.split("_")
@@ -534,7 +534,7 @@ async def add_text_and_final_reminder(message: Message, state: FSMContext):
     await state.update_data(text=message.text)
     data = await state.get_data()
     await create_reminder(data)
-    await message.answer(f'Напоминание о событии {data.get('text')} добавлено успешно!')
+    await message.answer(f'Напоминание о событии {data.get("text")} добавлено успешно!')
     await state.clear()
 
 @user.message(F.text.lower() == 'удалить напоминание')
@@ -627,6 +627,8 @@ async def purchases_cmd(message: Message, state: FSMContext):
     
     
 async def show_purchase(message: Message, purchase, current_index, total_count): # универсальная функция для вывода
+    if purchase.price == None:
+        purchase.price = 0
     text = (
     f"Покупка: {purchase.text}\n"
     f"Цена: {purchase.price:.2f} ₽\n\n")

@@ -1,6 +1,26 @@
 from datetime import datetime, timedelta
 
-from app.database.models import Reminders, User
+from app.database.models import Service, Reminders, User
+
+
+async def check_service_reminders():
+    from run import bot
+
+    now = datetime.now().date()
+
+    services_due = await Service.filter(next_service_date__lte=now).prefetch_related(
+        "car"
+    )
+
+    for service in services_due:
+        user_id = service.car.user.tg_id
+
+        message_text = f"Напоминание: следующий {service.type} для вашего автомобиля {service.car.model} запланирован на {service.next_service_date}."
+
+        await bot.send_message(user_id, message_text)
+
+        service.next_service_date = service.next_service_date + timedelta(days=240)
+        await service.save()
 
 
 async def check_reminders():
@@ -21,4 +41,4 @@ async def send_seasonal_notifications():
 
     users = await User.all()
     for user in users:
-        await bot.send_message(user.tg_id, "Время заменить Омывающую жидкость и переобуть резину")
+        await bot.send_message(user.tg_id, "Время поменять омывайку и шины")
