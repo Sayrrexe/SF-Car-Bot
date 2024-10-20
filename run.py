@@ -9,7 +9,7 @@ from tortoise import Tortoise
 
 from app.user import user
 from config import TOKEN, DB_URL, DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
-from app.schedule import check_reminders, send_seasonal_notifications
+from app.schedule import check_service_reminders, check_reminders, send_seasonal_notifications
 
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ async def startup(dispatcher: Dispatcher):
     await Tortoise.generate_schemas()
 
     scheduler = AsyncIOScheduler()
+    scheduler.add_job(check_service_reminders, "interval", hours=24)
     scheduler.add_job(check_reminders, "interval", hours=24)
     scheduler.add_job(
         send_seasonal_notifications, "cron", month="10", day="15", hour=9
