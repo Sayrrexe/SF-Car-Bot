@@ -3,8 +3,6 @@ from datetime import timedelta
 from tortoise.models import Model
 from tortoise import fields
 
-from config import TYPE_CHOICES
-
 
 class User(Model):
     id = fields.IntField(primary_key=True)

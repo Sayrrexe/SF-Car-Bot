@@ -36,44 +36,6 @@ import app.keyboards as kb
 import app.states as st
 
 from config import TYPE_CHOICES
-import logging
-
-from datetime import datetime, timedelta
-import datetime as dt
-
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, FSInputFile
-from aiogram.filters import CommandStart, Command
-from aiogram.fsm.context import FSMContext
-
-from app.calendar import NewCalendar
-
-from aiogram_calendar import SimpleCalendarCallback, SimpleCalendar
-from aiogram_calendar import SimpleCalendarCallback as ServiceCalendar
-
-from app.database.requests import (
-    create_user,
-    create_car,
-    create_service,
-    get_all_user_cars,
-    get_all_user_nots_per_year,
-    delete_car_by_model,
-    get_car_by_model,
-    create_notes,
-    create_reminder,
-    get_user_notes,
-    create_purchase,
-    get_user_purchases,
-    delete_note_by_title,
-    delete_user_reminders_by_text,
-    delete_user_purchases,
-
-)
-
-import app.keyboards as kb
-import app.states as st
-
-from config import TYPE_CHOICES
 
 logger = logging.getLogger(__name__)
 
