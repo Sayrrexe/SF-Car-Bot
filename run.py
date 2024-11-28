@@ -18,8 +18,7 @@ bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 async def startup(dispatcher: Dispatcher):
     await Tortoise.init(
-        db_url=f"postgres://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
-        #db_url=DB_URL,
+        db_url=DB_URL,
         modules={"models": ["app.database.models"]},
     )
     await Tortoise.generate_schemas()
